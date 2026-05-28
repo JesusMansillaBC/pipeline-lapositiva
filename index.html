@@ -258,6 +258,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
 
 <div class="main">
   <!-- METRICS -->
+  <div id="non-budget-top">
   <div class="metrics" id="metrics"></div>
 
   <!-- SEMÁFOROS -->
@@ -268,9 +269,10 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
     <div class="month-prog-title">Avance mensual estimado del equipo — calculado automáticamente por peso de hitos</div>
     <div class="month-prog-grid" id="month-prog-grid"></div>
   </div>
+  </div><!-- end non-budget-top -->
 
   <!-- FILTERS -->
-  <div class="filters">
+  <div class="filters" id="main-filters">
     <span class="filter-lbl">Proyecto:</span>
     <select id="filt-proj" onchange="renderCurrentView()"><option value="all">Todos los proyectos</option></select>
     <span class="filter-lbl">Estado:</span>
@@ -280,6 +282,11 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
       <option>Bloqueado</option><option>Completado</option>
     </select>
     <input type="text" id="filt-search" placeholder="Buscar hito..." oninput="renderCurrentView()" style="width:180px">
+  </div>
+  <!-- BUDGET FILTER -->
+  <div class="filters hidden" id="budget-filters">
+    <span class="filter-lbl">Proyecto:</span>
+    <select id="filt-budget-proj" onchange="renderPresupuesto()"><option value="all">Todos los proyectos</option></select>
   </div>
 
   <div id="view-kanban" class="view-section"></div>
@@ -386,7 +393,10 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
       <input type="hidden" id="mb-proj">
       <div class="form-row">
         <div class="form-group"><label>Presupuesto Total del Proyecto (S/.)</label><input id="mb-total" type="number" min="0" step="0.01" placeholder="0.00"></div>
-        <div class="form-group"><label>Presupuesto Solicitado C2 (S/.)</label><input id="mb-c2" type="number" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="form-group"><label>Cuatrimestre</label><select id="mb-cuatri"><option value="C1">C1</option><option value="C2" selected>C2</option><option value="C3">C3</option></select></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label>Presupuesto Solicitado en el Cuatrimestre (S/.)</label><input id="mb-c2" type="number" min="0" step="0.01" placeholder="0.00" oninput="updateBudgetPreview(document.getElementById('mb-proj').value)"></div>
       </div>
       <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:12px 0 8px">Ejecución mensual</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px" id="mb-months-grid"></div>
@@ -545,11 +555,14 @@ function getFiltered() {
 }
 
 function rebuildProjectFilter() {
+  const opts = projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
   const sel=document.getElementById('filt-proj'), cur=sel.value;
-  sel.innerHTML='<option value="all">Todos los proyectos</option>'+projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  sel.innerHTML='<option value="all">Todos los proyectos</option>'+opts;
   if(projects.find(p=>p.id===cur)) sel.value=cur;
+  const bsel=document.getElementById('filt-budget-proj');
+  if(bsel){ const bcur=bsel.value; bsel.innerHTML='<option value="all">Todos los proyectos</option>'+opts; if(projects.find(p=>p.id===bcur)) bsel.value=bcur; }
   const ah=document.getElementById('ah-proj');
-  if(ah) ah.innerHTML=projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  if(ah) ah.innerHTML=opts;
 }
 
 // ─── METRICS ─────────────────────────────────────────────
@@ -968,6 +981,11 @@ function setView(v,el){
   ['kanban','gantt','graficos','proyectos','presupuesto'].forEach(id=>{
     document.getElementById('view-'+id).classList.toggle('hidden',id!==v);
   });
+  // Toggle top sections visibility
+  const isBudget = v==='presupuesto';
+  document.getElementById('non-budget-top').classList.toggle('hidden', isBudget);
+  document.getElementById('main-filters').classList.toggle('hidden', isBudget);
+  document.getElementById('budget-filters').classList.toggle('hidden', !isBudget);
   renderCurrentView();
 }
 
@@ -1313,18 +1331,23 @@ function getProyeccion(projId) {
 // ─── RENDER PRESUPUESTO ───────────────────────────────────
 function renderPresupuesto() {
   const el = document.getElementById('view-presupuesto');
-  // Summary totals
-  const totalPresup = budgets.reduce((a,b)=>a+parseFloat(b.presupuesto_c2||0),0);
-  const totalExecAll = projects.reduce((a,p)=>a+getTotalExec(p.id),0);
-  const totalPlanAll = projects.reduce((a,p)=>a+getTotalPlan(p.id),0);
+  // Budget filter
+  const filtBudget = document.getElementById('filt-budget-proj')?.value || 'all';
+  const visibleProjs = filtBudget==='all' ? projects : projects.filter(p=>p.id===filtBudget);
+  // Summary totals (only visible projects)
+  const totalPresup = visibleProjs.reduce((a,p)=>{ const b=getBudget(p.id); return a+parseFloat(b.presupuesto_c2||0); },0);
+  const totalExecAll = visibleProjs.reduce((a,p)=>a+getTotalExec(p.id),0);
+  const totalPlanAll = visibleProjs.reduce((a,p)=>a+getTotalPlan(p.id),0);
+  const totalPresupTotal = visibleProjs.reduce((a,p)=>{ const b=getBudget(p.id); return a+parseFloat(b.presupuesto_total||0); },0);
   const pctExecTotal = totalPresup>0 ? (totalExecAll/totalPresup*100) : 0;
-  const proyeccionTotal = projects.reduce((a,p)=>a+getProyeccion(p.id),0);
+  const proyeccionTotal = visibleProjs.reduce((a,p)=>a+getProyeccion(p.id),0);
+  const cuatri = visibleProjs.length===1 ? (getBudget(visibleProjs[0].id).cuatrimestre||'C2') : 'C2';
 
-  // Global exec por mes
+  // Global exec por mes (visible projects)
   const monthTotals = ['mayo','junio','julio','agosto'].map(m=>({
     key:m, label:MONTH_LABELS[m], color:MONTH_COLORS[m],
-    exec: projects.reduce((a,p)=>a+parseFloat(getExec(p.id,m).ejecutado||0),0),
-    plan: projects.reduce((a,p)=>a+parseFloat(getExec(p.id,m).planificado||0),0),
+    exec: visibleProjs.reduce((a,p)=>a+parseFloat(getExec(p.id,m).ejecutado||0),0),
+    plan: visibleProjs.reduce((a,p)=>a+parseFloat(getExec(p.id,m).planificado||0),0),
   }));
 
   let semAlert = '';
@@ -1333,13 +1356,13 @@ function renderPresupuesto() {
   else if (totalPlanAll > 0 && totalExecAll < totalPlanAll*0.7) semAlert = '<span style="background:var(--blue-bg);color:var(--blue);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-left:10px">🔵 Por debajo del plan</span>';
 
   el.innerHTML = `
-    <div class="sec-hdr"><h2>Control de Presupuesto — C2 2026${semAlert}</h2></div>
+    <div class="sec-hdr"><h2>Control de Presupuesto — ${cuatri} 2026${semAlert}</h2><span style="font-size:11px;color:var(--text3)">${visibleProjs.length} proyecto${visibleProjs.length!==1?"s":""} · ${fmtSoles(totalPresupTotal)} presupuesto total</span></div>
 
     <div class="budget-summary-bar">
       <div class="bsb-item">
         <div class="bsb-lbl">Presupuesto solicitado C2</div>
         <div class="bsb-val" style="color:var(--brand)">${fmtSoles(totalPresup)}</div>
-        <div class="bsb-sub">${projects.length} proyectos</div>
+        <div class="bsb-sub">${visibleProjs.length} proyecto${visibleProjs.length!==1?"s":""}</div>
       </div>
       <div class="bsb-item">
         <div class="bsb-lbl">Total ejecutado</div>
@@ -1379,7 +1402,7 @@ function renderPresupuesto() {
     </div>
 
     <div class="budget-grid">
-      ${projects.map(p=>{
+      ${visibleProjs.map(p=>{
         const b = getBudget(p.id);
         const c2 = parseFloat(b.presupuesto_c2||0);
         const total = parseFloat(b.presupuesto_total||0);
@@ -1408,7 +1431,7 @@ function renderPresupuesto() {
                 <div class="budget-stat-val" style="font-size:14px">${fmtSoles(total)}</div>
               </div>
               <div class="budget-stat">
-                <div class="budget-stat-lbl">Solicitado C2</div>
+                <div class="budget-stat-lbl">Solicitado ${b.cuatrimestre||'C2'}</div>
                 <div class="budget-stat-val" style="color:var(--brand)">${fmtSoles(c2)}</div>
               </div>
               <div class="budget-stat">
@@ -1460,9 +1483,11 @@ function openModalBudget(projId, focusMonth) {
   const b = getBudget(projId);
   document.getElementById('mb-proj').value = projId;
   document.getElementById('mb-title').textContent = p.name;
-  document.getElementById('mb-subtitle').textContent = 'Presupuesto en Soles (S/.)';
+  const cuatriVal = b.cuatrimestre||'C2';
+  document.getElementById('mb-subtitle').textContent = `Presupuesto en Soles (S/.) — ${cuatriVal} 2026`;
   document.getElementById('mb-total').value = b.presupuesto_total||0;
   document.getElementById('mb-c2').value = b.presupuesto_c2||0;
+  document.getElementById('mb-cuatri').value = b.cuatrimestre||'C2';
 
   const grid = document.getElementById('mb-months-grid');
   grid.innerHTML = ['mayo','junio','julio','agosto'].map(m=>{
@@ -1504,12 +1529,20 @@ async function saveModalBudget() {
   btn.disabled=true; btn.textContent='Guardando...';
   setSyncing(true);
 
+  // Check if budget row exists
+  const {data:existB} = await db.from('budgets').select('id').eq('proj',projId).maybeSingle();
   const budgetPayload = {
     proj: projId,
     presupuesto_total: parseFloat(document.getElementById('mb-total').value)||0,
     presupuesto_c2: parseFloat(document.getElementById('mb-c2').value)||0,
+    cuatrimestre: document.getElementById('mb-cuatri').value||'C2',
   };
-  const {error:bErr} = await db.from('budgets').upsert(budgetPayload, {onConflict:'proj'});
+  let bErr;
+  if(existB) {
+    ({error:bErr} = await db.from('budgets').update(budgetPayload).eq('proj',projId));
+  } else {
+    ({error:bErr} = await db.from('budgets').insert(budgetPayload));
+  }
   if(bErr){ showToast('Error guardando presupuesto: '+bErr.message,true); setSyncing(false); btn.disabled=false; btn.textContent='💾 Guardar'; return; }
 
   for(const m of ['mayo','junio','julio','agosto']){
@@ -1518,7 +1551,14 @@ async function saveModalBudget() {
       planificado: parseFloat(document.getElementById('mb-plan-'+m)?.value)||0,
       ejecutado:   parseFloat(document.getElementById('mb-exec-'+m)?.value)||0,
     };
-    const {error:eErr} = await db.from('budget_execution').upsert(execPayload, {onConflict:'proj,month_key'});
+    // Check if row exists
+    const {data:existE} = await db.from('budget_execution').select('id').eq('proj',projId).eq('month_key',m).maybeSingle();
+    let eErr;
+    if(existE){
+      ({error:eErr} = await db.from('budget_execution').update(execPayload).eq('proj',projId).eq('month_key',m));
+    } else {
+      ({error:eErr} = await db.from('budget_execution').insert(execPayload));
+    }
     if(eErr){ showToast('Error en mes '+m+': '+eErr.message,true); }
   }
 

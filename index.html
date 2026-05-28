@@ -184,6 +184,41 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* PRESUPUESTO */
+.budget-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;margin-bottom:28px}
+.budget-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow)}
+.budget-card-hdr{padding:13px 16px 11px;display:flex;align-items:center;justify-content:space-between;border-bottom:1.5px solid var(--border)}
+.budget-card-title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:7px}
+.budget-card-pill{font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px}
+.budget-body{padding:14px 16px}
+.budget-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.budget-stat{display:flex;flex-direction:column;gap:2px}
+.budget-stat-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)}
+.budget-stat-val{font-size:16px;font-weight:700;color:var(--text)}
+.budget-stat-sub{font-size:10px;color:var(--text3)}
+.budget-prog-wrap{margin-bottom:12px}
+.budget-prog-lbl{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+.budget-prog-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;position:relative}
+.budget-prog-fill{height:100%;border-radius:4px;transition:width .5s}
+.budget-prog-plan{position:absolute;top:0;width:2px;height:100%;background:#1A2335;z-index:2}
+.budget-months{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.budget-month-cell{border:1.5px solid var(--border);border-radius:8px;padding:7px 8px;cursor:pointer;transition:.15s}
+.budget-month-cell:hover{border-color:var(--brand)}
+.budget-month-cell-name{font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3);margin-bottom:3px}
+.budget-month-exec{font-size:13px;font-weight:700}
+.budget-month-plan{font-size:9px;color:var(--text3)}
+.budget-month-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:4px}
+.budget-month-fill{height:100%;border-radius:2px}
+.budget-edit-btn{font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;border:1.5px solid var(--border2);background:var(--surface);cursor:pointer;color:var(--text2)}
+.budget-edit-btn:hover{border-color:var(--brand);color:var(--brand)}
+.budget-summary-bar{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:14px 20px;margin-bottom:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;box-shadow:var(--shadow)}
+.bsb-item{display:flex;flex-direction:column;gap:2px}
+.bsb-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)}
+.bsb-val{font-size:20px;font-weight:700}
+.bsb-sub{font-size:10px;color:var(--text3)}
+.proj-alert{font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;display:inline-flex;align-items:center;gap:3px}
+
 </style>
 </head>
 <body>
@@ -218,6 +253,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
   <div class="nav-tab" onclick="setView('gantt',this)">Cronograma</div>
   <div class="nav-tab" onclick="setView('graficos',this)">Gráficos</div>
   <div class="nav-tab" onclick="setView('proyectos',this)">Por Proyecto</div>
+  <div class="nav-tab" onclick="setView('presupuesto',this)">💰 Presupuesto</div>
 </div>
 
 <div class="main">
@@ -250,6 +286,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
   <div id="view-gantt" class="view-section hidden"></div>
   <div id="view-graficos" class="view-section hidden"></div>
   <div id="view-proyectos" class="view-section hidden"></div>
+  <div id="view-presupuesto" class="view-section hidden"></div>
 </div>
 
 <!-- MODAL EDITAR HITO -->
@@ -336,6 +373,31 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
   </div>
 </div>
 
+
+
+<!-- MODAL PRESUPUESTO -->
+<div class="modal-overlay" id="modal-budget-overlay" onclick="e=>e.target===document.getElementById('modal-budget-overlay')&&closeModalBudget()">
+  <div class="modal" style="width:520px">
+    <div class="modal-hdr">
+      <div><div class="modal-title" id="mb-title">Editar presupuesto</div><div class="modal-subtitle" id="mb-subtitle"></div></div>
+      <button class="modal-close" onclick="closeModalBudget()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="mb-proj">
+      <div class="form-row">
+        <div class="form-group"><label>Presupuesto Total del Proyecto (S/.)</label><input id="mb-total" type="number" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="form-group"><label>Presupuesto Solicitado C2 (S/.)</label><input id="mb-c2" type="number" min="0" step="0.01" placeholder="0.00"></div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:12px 0 8px">Ejecución mensual</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px" id="mb-months-grid"></div>
+      <div id="mb-preview" style="margin-top:14px;font-size:11px;color:var(--text3);background:var(--surface2);border-radius:8px;padding:10px 12px;border:1px solid var(--border)"></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn" onclick="closeModalBudget()">Cancelar</button>
+      <button class="btn btn-primary" id="mb-save-btn" onclick="saveModalBudget()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL DESCARGA -->
 <div class="modal-overlay" id="modal-download-overlay" onclick="e=>e.target===document.getElementById('modal-download-overlay')&&closeDownloadModal()">
@@ -448,6 +510,7 @@ async function loadAll() {
     if (tRes.error) throw tRes.error;
     projects = pRes.data;
     tasks = tRes.data;
+    await loadBudgets();
     rebuildProjectFilter();
     renderAll();
   } catch(e) {
@@ -902,7 +965,7 @@ function setView(v,el){
   currentView=v;
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  ['kanban','gantt','graficos','proyectos'].forEach(id=>{
+  ['kanban','gantt','graficos','proyectos','presupuesto'].forEach(id=>{
     document.getElementById('view-'+id).classList.toggle('hidden',id!==v);
   });
   renderCurrentView();
@@ -915,6 +978,7 @@ function renderCurrentView(){
   else if(currentView==='gantt') renderGantt();
   else if(currentView==='graficos') renderGraficos();
   else if(currentView==='proyectos') renderPorProyecto();
+  else if(currentView==='presupuesto') renderPresupuesto();
 }
 
 function renderAll(){
@@ -924,6 +988,7 @@ function renderAll(){
   if(currentView==='gantt') renderGantt();
   else if(currentView==='graficos') renderGraficos();
   else if(currentView==='proyectos') renderPorProyecto();
+  else if(currentView==='presupuesto') renderPresupuesto();
 }
 
 function showToast(msg,isError=false){
@@ -1177,6 +1242,291 @@ function downloadExcel() {
     btn.disabled=false; btn.textContent='⬇ Descargar .xlsx';
     closeDownloadModal();
   }
+}
+
+
+// ─── PRESUPUESTO STATE ────────────────────────────────────
+let budgets = [];
+let budgetExec = [];
+const MONTH_LABELS = {mayo:'Mayo',junio:'Junio',julio:'Julio',agosto:'Agosto'};
+const MONTH_COLORS = {mayo:'#1E6FBF',junio:'#0A7C55',julio:'#B05800',agosto:'#6B35C1'};
+
+// ─── LOAD BUDGET ──────────────────────────────────────────
+async function loadBudgets() {
+  const [bRes, eRes] = await Promise.all([
+    db.from('budgets').select('*'),
+    db.from('budget_execution').select('*'),
+  ]);
+  if (!bRes.error) budgets = bRes.data;
+  if (!eRes.error) budgetExec = eRes.data;
+}
+
+function getBudget(projId) {
+  return budgets.find(b=>b.proj===projId) || {proj:projId, presupuesto_total:0, presupuesto_c2:0};
+}
+
+function getExec(projId, monthKey) {
+  const r = budgetExec.find(e=>e.proj===projId && e.month_key===monthKey);
+  return r || {ejecutado:0, planificado:0};
+}
+
+function getTotalExec(projId) {
+  return ['mayo','junio','julio','agosto'].reduce((a,m)=>a+parseFloat(getExec(projId,m).ejecutado||0),0);
+}
+
+function getTotalPlan(projId) {
+  return ['mayo','junio','julio','agosto'].reduce((a,m)=>a+parseFloat(getExec(projId,m).planificado||0),0);
+}
+
+function fmtSoles(v) {
+  const n = parseFloat(v||0);
+  return 'S/. '+n.toLocaleString('es-PE',{minimumFractionDigits:0,maximumFractionDigits:0});
+}
+
+function getBudgetSemaforo(projId) {
+  const b = getBudget(projId);
+  const c2 = parseFloat(b.presupuesto_c2||0);
+  const exec = getTotalExec(projId);
+  if (c2 === 0) return {color:'var(--gray)',bg:'var(--gray-bg)',icon:'⚪',label:'Sin presupuesto'};
+  const pct = exec/c2*100;
+  if (pct > 100) return {color:'var(--red)',bg:'var(--red-bg)',icon:'🔴',label:`Sobrepasado ${pct.toFixed(0)}%`};
+  if (pct >= 90) return {color:'var(--amber)',bg:'var(--amber-bg)',icon:'🟡',label:`Ejecución alta ${pct.toFixed(0)}%`};
+  // Check bajo plan — si estamos en el mes y ejecución < 70% del plan
+  const planAcum = getTotalPlan(projId);
+  if (planAcum > 0 && exec < planAcum*0.7) return {color:'var(--blue)',bg:'var(--blue-bg)',icon:'🔵',label:`Por debajo del plan (${pct.toFixed(0)}%)`};
+  return {color:'var(--green)',bg:'var(--green-bg)',icon:'🟢',label:`Normal ${pct.toFixed(0)}%`};
+}
+
+function getProyeccion(projId) {
+  // Proyección lineal basada en ejecución acumulada vs meses transcurridos
+  const MONTHS_LIST = ['mayo','junio','julio','agosto'];
+  const TODAY2 = new Date();
+  const monthsElapsed = MONTHS_LIST.filter(m => {
+    const ends = {mayo:new Date('2026-05-31'),junio:new Date('2026-06-30'),julio:new Date('2026-07-31'),agosto:new Date('2026-08-31')};
+    return ends[m] <= TODAY2;
+  }).length || 1;
+  const execSoFar = getTotalExec(projId);
+  const projected = (execSoFar / monthsElapsed) * 4;
+  return projected;
+}
+
+// ─── RENDER PRESUPUESTO ───────────────────────────────────
+function renderPresupuesto() {
+  const el = document.getElementById('view-presupuesto');
+  // Summary totals
+  const totalPresup = budgets.reduce((a,b)=>a+parseFloat(b.presupuesto_c2||0),0);
+  const totalExecAll = projects.reduce((a,p)=>a+getTotalExec(p.id),0);
+  const totalPlanAll = projects.reduce((a,p)=>a+getTotalPlan(p.id),0);
+  const pctExecTotal = totalPresup>0 ? (totalExecAll/totalPresup*100) : 0;
+  const proyeccionTotal = projects.reduce((a,p)=>a+getProyeccion(p.id),0);
+
+  // Global exec por mes
+  const monthTotals = ['mayo','junio','julio','agosto'].map(m=>({
+    key:m, label:MONTH_LABELS[m], color:MONTH_COLORS[m],
+    exec: projects.reduce((a,p)=>a+parseFloat(getExec(p.id,m).ejecutado||0),0),
+    plan: projects.reduce((a,p)=>a+parseFloat(getExec(p.id,m).planificado||0),0),
+  }));
+
+  let semAlert = '';
+  if (pctExecTotal > 100) semAlert = '<span style="background:var(--red-bg);color:var(--red);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-left:10px">🔴 Presupuesto superado</span>';
+  else if (pctExecTotal >= 90) semAlert = '<span style="background:var(--amber-bg);color:var(--amber);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-left:10px">🟡 Ejecución alta</span>';
+  else if (totalPlanAll > 0 && totalExecAll < totalPlanAll*0.7) semAlert = '<span style="background:var(--blue-bg);color:var(--blue);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-left:10px">🔵 Por debajo del plan</span>';
+
+  el.innerHTML = `
+    <div class="sec-hdr"><h2>Control de Presupuesto — C2 2026${semAlert}</h2></div>
+
+    <div class="budget-summary-bar">
+      <div class="bsb-item">
+        <div class="bsb-lbl">Presupuesto solicitado C2</div>
+        <div class="bsb-val" style="color:var(--brand)">${fmtSoles(totalPresup)}</div>
+        <div class="bsb-sub">${projects.length} proyectos</div>
+      </div>
+      <div class="bsb-item">
+        <div class="bsb-lbl">Total ejecutado</div>
+        <div class="bsb-val" style="color:${pctExecTotal>100?'var(--red)':pctExecTotal>=90?'var(--amber)':'var(--green)'}">${fmtSoles(totalExecAll)}</div>
+        <div class="bsb-sub">${pctExecTotal.toFixed(1)}% del C2</div>
+      </div>
+      <div class="bsb-item">
+        <div class="bsb-lbl">Plan acumulado</div>
+        <div class="bsb-val" style="color:var(--blue)">${fmtSoles(totalPlanAll)}</div>
+        <div class="bsb-sub">según cronograma</div>
+      </div>
+      <div class="bsb-item">
+        <div class="bsb-lbl">Proyección de cierre C2</div>
+        <div class="bsb-val" style="color:${proyeccionTotal>totalPresup?'var(--red)':'var(--text)'}">${fmtSoles(proyeccionTotal)}</div>
+        <div class="bsb-sub">${proyeccionTotal>totalPresup?'⚠ Supera presupuesto':'Dentro del rango'}</div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:16px;box-shadow:var(--shadow)">
+      <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Ejecución mensual consolidada</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+        ${monthTotals.map(m=>{
+          const pct = m.plan>0 ? Math.min(150,m.exec/m.plan*100) : (m.exec>0?100:0);
+          const barColor = pct>100?'var(--red)':pct>=90?'var(--amber)':'var(--green)';
+          return `<div style="border:1.5px solid var(--border);border-radius:8px;padding:10px 12px">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:${m.color};margin-bottom:5px">${m.label}</div>
+            <div style="font-size:15px;font-weight:700;color:var(--text)">${fmtSoles(m.exec)}</div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:5px">Plan: ${fmtSoles(m.plan)}</div>
+            <div class="budget-prog-bar">
+              <div class="budget-prog-fill" style="width:${Math.min(100,pct)}%;background:${barColor}"></div>
+              ${m.plan>0?`<div class="budget-prog-plan" style="left:100%"></div>`:''}
+            </div>
+            <div style="font-size:10px;font-weight:700;color:${barColor};margin-top:3px">${pct.toFixed(0)}% ejecutado</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="budget-grid">
+      ${projects.map(p=>{
+        const b = getBudget(p.id);
+        const c2 = parseFloat(b.presupuesto_c2||0);
+        const total = parseFloat(b.presupuesto_total||0);
+        const exec = getTotalExec(p.id);
+        const plan = getTotalPlan(p.id);
+        const pctExec = c2>0 ? (exec/c2*100) : 0;
+        const pctPlan = c2>0 ? (plan/c2*100) : 0;
+        const sm = getBudgetSemaforo(p.id);
+        const proy = getProyeccion(p.id);
+        const barColor = pctExec>100?'var(--red)':pctExec>=90?'var(--amber)':'var(--green)';
+        return `<div class="budget-card" style="border-color:${p.color}33">
+          <div class="budget-card-hdr" style="background:${p.color}0D">
+            <div class="budget-card-title">
+              <div style="width:10px;height:10px;border-radius:50%;background:${p.color};flex-shrink:0"></div>
+              ${p.name}
+            </div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <span class="budget-card-pill" style="background:${sm.bg};color:${sm.color}">${sm.icon} ${sm.label}</span>
+              <button class="budget-edit-btn" onclick="openModalBudget('${p.id}')">✏ Editar</button>
+            </div>
+          </div>
+          <div class="budget-body">
+            <div class="budget-row">
+              <div class="budget-stat">
+                <div class="budget-stat-lbl">Presupuesto total</div>
+                <div class="budget-stat-val" style="font-size:14px">${fmtSoles(total)}</div>
+              </div>
+              <div class="budget-stat">
+                <div class="budget-stat-lbl">Solicitado C2</div>
+                <div class="budget-stat-val" style="color:var(--brand)">${fmtSoles(c2)}</div>
+              </div>
+              <div class="budget-stat">
+                <div class="budget-stat-lbl">Total ejecutado</div>
+                <div class="budget-stat-val" style="color:${barColor}">${fmtSoles(exec)}</div>
+                <div class="budget-stat-sub">${pctExec.toFixed(1)}% del C2</div>
+              </div>
+            </div>
+
+            <div class="budget-prog-wrap">
+              <div class="budget-prog-lbl">
+                <span style="font-size:10px;color:var(--text3)">Ejecución vs Presupuesto C2</span>
+                <span style="font-size:10px;font-weight:700;color:${barColor}">${pctExec.toFixed(1)}%</span>
+              </div>
+              <div class="budget-prog-bar" style="height:10px">
+                <div class="budget-prog-fill" style="width:${Math.min(100,pctExec)}%;background:${barColor}"></div>
+                ${pctPlan>0?`<div class="budget-prog-plan" style="left:${Math.min(100,pctPlan)}%"></div>`:''}
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:3px">
+                <span style="font-size:9px;color:var(--text3)">Plan acum: ${fmtSoles(plan)}</span>
+                <span style="font-size:9px;color:var(--text3)">Proyección cierre: <strong style="color:${proy>c2&&c2>0?'var(--red)':'var(--text)'}">${fmtSoles(proy)}</strong></span>
+              </div>
+            </div>
+
+            <div class="budget-months">
+              ${['mayo','junio','julio','agosto'].map(m=>{
+                const me = getExec(p.id,m);
+                const mExec = parseFloat(me.ejecutado||0);
+                const mPlan = parseFloat(me.planificado||0);
+                const mPct = mPlan>0 ? Math.min(150,mExec/mPlan*100) : (mExec>0?100:0);
+                const mColor = mPct>100?'var(--red)':mPct>=90?'var(--amber)':MONTH_COLORS[m];
+                return `<div class="budget-month-cell" onclick="openModalBudget('${p.id}','${m}')">
+                  <div class="budget-month-cell-name" style="color:${MONTH_COLORS[m]}">${MONTH_LABELS[m]}</div>
+                  <div class="budget-month-exec" style="color:${mColor}">${fmtSoles(mExec)}</div>
+                  <div class="budget-month-plan">Plan: ${fmtSoles(mPlan)}</div>
+                  <div class="budget-month-bar"><div class="budget-month-fill" style="width:${Math.min(100,mPct)}%;background:${mColor}"></div></div>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+// ─── MODAL BUDGET ─────────────────────────────────────────
+function openModalBudget(projId, focusMonth) {
+  const p = projById(projId);
+  const b = getBudget(projId);
+  document.getElementById('mb-proj').value = projId;
+  document.getElementById('mb-title').textContent = p.name;
+  document.getElementById('mb-subtitle').textContent = 'Presupuesto en Soles (S/.)';
+  document.getElementById('mb-total').value = b.presupuesto_total||0;
+  document.getElementById('mb-c2').value = b.presupuesto_c2||0;
+
+  const grid = document.getElementById('mb-months-grid');
+  grid.innerHTML = ['mayo','junio','julio','agosto'].map(m=>{
+    const me = getExec(projId, m);
+    return `<div style="display:flex;flex-direction:column;gap:4px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:${MONTH_COLORS[m]};letter-spacing:.04em">${MONTH_LABELS[m]}</div>
+      <div class="form-group"><label style="color:var(--text3)">Planificado</label>
+        <input type="number" id="mb-plan-${m}" min="0" step="0.01" value="${me.planificado||0}" style="font-size:12px;padding:5px 8px">
+      </div>
+      <div class="form-group"><label style="color:var(--brand)">Ejecutado</label>
+        <input type="number" id="mb-exec-${m}" min="0" step="0.01" value="${me.ejecutado||0}" style="font-size:12px;padding:5px 8px" oninput="updateBudgetPreview('${projId}')">
+      </div>
+    </div>`;
+  }).join('');
+
+  updateBudgetPreview(projId);
+  document.getElementById('modal-budget-overlay').classList.add('open');
+  if(focusMonth) setTimeout(()=>{ const el=document.getElementById('mb-exec-'+focusMonth); if(el){el.focus();el.select();}},100);
+}
+
+function updateBudgetPreview(projId) {
+  const c2 = parseFloat(document.getElementById('mb-c2')?.value||0);
+  const execNow = ['mayo','junio','julio','agosto'].reduce((a,m)=>{
+    return a + parseFloat(document.getElementById('mb-exec-'+m)?.value||0);
+  },0);
+  const pct = c2>0 ? (execNow/c2*100).toFixed(1) : 0;
+  const color = parseFloat(pct)>100?'var(--red)':parseFloat(pct)>=90?'var(--amber)':'var(--green)';
+  const prev = document.getElementById('mb-preview');
+  if(prev) prev.innerHTML = `Ejecución total ingresada: <strong style="color:${color}">${fmtSoles(execNow)}</strong> · ${pct}% del presupuesto C2 (${fmtSoles(c2)})`;
+}
+
+function closeModalBudget() {
+  document.getElementById('modal-budget-overlay').classList.remove('open');
+}
+
+async function saveModalBudget() {
+  const projId = document.getElementById('mb-proj').value;
+  const btn = document.getElementById('mb-save-btn');
+  btn.disabled=true; btn.textContent='Guardando...';
+  setSyncing(true);
+
+  const budgetPayload = {
+    proj: projId,
+    presupuesto_total: parseFloat(document.getElementById('mb-total').value)||0,
+    presupuesto_c2: parseFloat(document.getElementById('mb-c2').value)||0,
+  };
+  const {error:bErr} = await db.from('budgets').upsert(budgetPayload, {onConflict:'proj'});
+  if(bErr){ showToast('Error guardando presupuesto: '+bErr.message,true); setSyncing(false); btn.disabled=false; btn.textContent='💾 Guardar'; return; }
+
+  for(const m of ['mayo','junio','julio','agosto']){
+    const execPayload = {
+      proj: projId, month_key: m,
+      planificado: parseFloat(document.getElementById('mb-plan-'+m)?.value)||0,
+      ejecutado:   parseFloat(document.getElementById('mb-exec-'+m)?.value)||0,
+    };
+    const {error:eErr} = await db.from('budget_execution').upsert(execPayload, {onConflict:'proj,month_key'});
+    if(eErr){ showToast('Error en mes '+m+': '+eErr.message,true); }
+  }
+
+  setSyncing(false); btn.disabled=false; btn.textContent='💾 Guardar';
+  closeModalBudget();
+  await loadBudgets();
+  renderPresupuesto();
+  showToast('Presupuesto de '+projById(projId).name+' guardado ✓');
 }
 
 // ─── INIT ─────────────────────────────────────────────────

@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
   --brand:#E85F1E;--brand2:#1E4FA3;
@@ -205,6 +206,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
     </div>
   </div>
   <div class="topbar-right">
+    <button class="btn" onclick="openDownloadModal()" title="Descargar reporte Excel" style="gap:6px">📥 Reporte</button>
     <button class="btn" onclick="openAddProject()">＋ Proyecto</button>
     <button class="btn btn-primary" onclick="openAddHito()">＋ Hito</button>
   </div>
@@ -330,6 +332,39 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
     <div class="modal-ftr">
       <button class="btn" onclick="closeAddProject()">Cancelar</button>
       <button class="btn btn-primary" id="ap-save-btn" onclick="saveAddProject()">Crear proyecto</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL DESCARGA -->
+<div class="modal-overlay" id="modal-download-overlay" onclick="e=>e.target===document.getElementById('modal-download-overlay')&&closeDownloadModal()">
+  <div class="modal" style="width:420px">
+    <div class="modal-hdr">
+      <div><div class="modal-title">📥 Descargar Reporte Excel</div><div class="modal-subtitle">Genera un .xlsx con los datos actuales del pipeline</div></div>
+      <button class="modal-close" onclick="closeDownloadModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Selecciona qué hojas incluir en el archivo:</p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="rpt-hitos" checked style="width:15px;height:15px;accent-color:var(--brand)">
+          <span><strong>Todos los hitos</strong> — nombre, proyecto, fechas, estado, peso %, avance %</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="rpt-proyectos" checked style="width:15px;height:15px;accent-color:var(--brand)">
+          <span><strong>Resumen por proyecto</strong> — avance ponderado, conteo por estado</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="rpt-filtro" style="width:15px;height:15px;accent-color:var(--brand)">
+          <span><strong>Aplicar filtro activo</strong> — solo exporta los datos visibles actualmente</span>
+        </label>
+      </div>
+      <div id="rpt-preview" style="margin-top:14px;font-size:11px;color:var(--text3);background:var(--surface2);border-radius:8px;padding:10px 12px;border:1px solid var(--border)"></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn" onclick="closeDownloadModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="downloadExcel()" id="rpt-btn">⬇ Descargar .xlsx</button>
     </div>
   </div>
 </div>
@@ -895,6 +930,253 @@ function showToast(msg,isError=false){
   const t=document.getElementById('toast');
   t.textContent=msg; t.className='toast'+(isError?' error':'');
   t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+
+// ─── DOWNLOAD EXCEL ──────────────────────────────────────
+function openDownloadModal() {
+  updateRptPreview();
+  document.getElementById('modal-download-overlay').classList.add('open');
+}
+function closeDownloadModal() {
+  document.getElementById('modal-download-overlay').classList.remove('open');
+}
+
+function updateRptPreview() {
+  const useFilter = document.getElementById('rpt-filtro').checked;
+  const taskList = useFilter ? getFiltered() : tasks;
+  const projList = useFilter ? projects.filter(p => taskList.some(t => t.proj === p.id)) : projects;
+  document.getElementById('rpt-preview').innerHTML =
+    `Vista previa: <strong>${taskList.length} hitos</strong> en <strong>${projList.length} proyecto(s)</strong> serán exportados.`;
+}
+
+document.addEventListener('change', e => {
+  if(['rpt-hitos','rpt-proyectos','rpt-filtro'].includes(e.target.id)) updateRptPreview();
+});
+
+function getCumplPct(pt) {
+  const TODAY2 = new Date(); TODAY2.setHours(0,0,0,0);
+  const total = pt.length;
+  if (!total) return 100;
+  const vencidos = pt.filter(t => {
+    const fe = new Date(t.fin+'T00:00:00'); return fe < TODAY2 && t.status !== 'Completado';
+  }).length;
+  return Math.round(((total - vencidos) / total) * 100);
+}
+
+function getSemaforoLabel(t) {
+  const TODAY2 = new Date(); TODAY2.setHours(0,0,0,0);
+  const fin = new Date(t.fin+'T00:00:00');
+  const diff = Math.ceil((fin - TODAY2) / 86400000);
+  if (t.status === 'Completado') return 'Completado a tiempo';
+  if (fin < TODAY2) return 'Vencido';
+  if (diff <= 7) return `Por vencer (${diff}d)`;
+  return 'En tiempo';
+}
+
+function styleHeader(ws, range, fgColor, bgColor) {
+  // Helper: just returns — actual cell styling via SheetJS CE is limited, handled via col widths
+}
+
+function downloadExcel() {
+  const btn = document.getElementById('rpt-btn');
+  btn.disabled = true; btn.textContent = 'Generando...';
+
+  try {
+    const useFilter = document.getElementById('rpt-filtro').checked;
+    const inclHitos = document.getElementById('rpt-hitos').checked;
+    const inclProj  = document.getElementById('rpt-proyectos').checked;
+    const taskList  = useFilter ? getFiltered() : tasks;
+    const projList  = useFilter ? projects.filter(p => taskList.some(t => t.proj === p.id)) : projects;
+
+    const wb = XLSX.utils.book_new();
+    const now = new Date().toLocaleDateString('es-PE');
+
+    // ── HOJA 1: Todos los hitos ──
+    if (inclHitos) {
+      const headers = ['#','Proyecto','Nombre del Hito','Fecha Inicio','Fecha Fin','Estado','Semáforo','Peso %','Avance %','Motivo Bloqueo','Notas'];
+      const rows = taskList.map((t, i) => {
+        const p = projById(t.proj);
+        return [
+          i+1,
+          p.name,
+          t.name,
+          t.ini || '',
+          t.fin  || '',
+          t.status,
+          getSemaforoLabel(t),
+          t.weight || 0,
+          t.status === 'Completado' ? 100 : (t.pct || 0),
+          t.bloq_reason || '',
+          t.notes || '',
+        ];
+      });
+
+      const wsData = [
+        ['INICIATIVAS – BC SALUD · Reporte de Hitos', '', '', '', '', '', '', '', '', '', ''],
+        [`Generado: ${now} · Filtro: ${useFilter ? (document.getElementById('filt-proj').options[document.getElementById('filt-proj').selectedIndex].text) : 'Todos los proyectos'}`, '','','','','','','','','',''],
+        [],
+        headers,
+        ...rows,
+      ];
+      const ws1 = XLSX.utils.aoa_to_sheet(wsData);
+
+      // Column widths
+      ws1['!cols'] = [
+        {wch:4},{wch:26},{wch:34},{wch:12},{wch:12},{wch:14},{wch:18},{wch:8},{wch:10},{wch:28},{wch:24}
+      ];
+      // Merge title
+      ws1['!merges'] = [{s:{r:0,c:0},e:{r:0,c:10}},{s:{r:1,c:0},e:{r:1,c:10}}];
+
+      // Color header row (row index 3 = 4th row)
+      const hdrRange = XLSX.utils.decode_range(ws1['!ref']);
+      for (let C = hdrRange.s.c; C <= hdrRange.e.c; C++) {
+        const addr = XLSX.utils.encode_cell({r:3, c:C});
+        if (!ws1[addr]) ws1[addr] = {v:'', t:'s'};
+        ws1[addr].s = {
+          fill:{fgColor:{rgb:'1A2335'}},
+          font:{bold:true, color:{rgb:'FFFFFF'}, name:'Arial', sz:9},
+          alignment:{horizontal:'center',vertical:'center'},
+          border:{bottom:{style:'medium',color:{rgb:'E85F1E'}}}
+        };
+      }
+      // Title style
+      if(ws1['A1']) ws1['A1'].s = {font:{bold:true,sz:13,name:'Arial',color:{rgb:'E85F1E'}},fill:{fgColor:{rgb:'FEF3E5'}}};
+
+      // Status colors for data rows
+      const statusColors = {
+        'Completado': {bg:'E8F7F2', fg:'0A7C55'},
+        'En Progreso': {bg:'EAF1FC', fg:'1563BB'},
+        'Bloqueado':   {bg:'FDECEB', fg:'C0392B'},
+        'No Iniciado': {bg:'EEF0F4', fg:'6B7A8D'},
+      };
+      rows.forEach((row, ri) => {
+        const excelRow = 4 + ri; // 0-indexed: row 3 = headers, row 4+ = data
+        const sc = statusColors[row[5]] || statusColors['No Iniciado'];
+        const statusCell = XLSX.utils.encode_cell({r:excelRow, c:5});
+        if(ws1[statusCell]) {
+          ws1[statusCell].s = {font:{bold:true,color:{rgb:sc.fg},name:'Arial',sz:9},fill:{fgColor:{rgb:sc.bg}},alignment:{horizontal:'center'}};
+        }
+        // Avance bar (pct col index 8)
+        const pctCell = XLSX.utils.encode_cell({r:excelRow, c:8});
+        if(ws1[pctCell]) {
+          ws1[pctCell].s = {font:{bold:true,color:{rgb:'E85F1E'},name:'Arial',sz:9},fill:{fgColor:{rgb:'FEF3E5'}},alignment:{horizontal:'center'}};
+          ws1[pctCell].v = (ws1[pctCell].v || 0) / 100;
+          ws1[pctCell].t = 'n';
+          ws1[pctCell].z = '0%';
+        }
+        // Weight col index 7
+        const wCell = XLSX.utils.encode_cell({r:excelRow, c:7});
+        if(ws1[wCell]){ws1[wCell].v=(ws1[wCell].v||0)/100;ws1[wCell].t='n';ws1[wCell].z='0%';}
+        // Alternate row bg
+        if(ri%2===0){
+          for(let C=0;C<=10;C++){
+            const cellAddr=XLSX.utils.encode_cell({r:excelRow,c:C});
+            if(ws1[cellAddr]&&C!==5&&C!==8&&C!==7){
+              ws1[cellAddr].s = ws1[cellAddr].s || {};
+              ws1[cellAddr].s.fill = {fgColor:{rgb:'F9FAFB'}};
+            }
+          }
+        }
+      });
+
+      XLSX.utils.book_append_sheet(wb, ws1, 'Hitos');
+    }
+
+    // ── HOJA 2: Resumen por proyecto ──
+    if (inclProj) {
+      const headers2 = ['Proyecto','Color','Total Hitos','Completados','En Progreso','Bloqueados','No Iniciados','Avance Ponderado %','Cumplimiento %'];
+      const rows2 = projList.map(p => {
+        const pt = taskList.filter(t => t.proj === p.id);
+        const wp = pt.reduce((a,t)=>a+t.weight,0)||1;
+        const avg = pt.length ? Math.round(pt.reduce((a,t)=>a+(t.pct*t.weight),0)/wp) : 0;
+        const cumpl = getCumplPct(pt);
+        return [
+          p.name,
+          p.color,
+          pt.length,
+          pt.filter(t=>t.status==='Completado').length,
+          pt.filter(t=>t.status==='En Progreso').length,
+          pt.filter(t=>t.status==='Bloqueado').length,
+          pt.filter(t=>t.status==='No Iniciado').length,
+          avg/100,
+          cumpl/100,
+        ];
+      });
+
+      // Totals row
+      const totalTasks = rows2.reduce((a,r)=>a+r[2],0);
+      const totalComp  = rows2.reduce((a,r)=>a+r[3],0);
+      const totalProg  = rows2.reduce((a,r)=>a+r[4],0);
+      const totalBloq  = rows2.reduce((a,r)=>a+r[5],0);
+      const totalNI    = rows2.reduce((a,r)=>a+r[6],0);
+      const avgTotal   = rows2.length ? rows2.reduce((a,r)=>a+r[7],0)/rows2.length : 0;
+      const cumplTotal = rows2.length ? rows2.reduce((a,r)=>a+r[8],0)/rows2.length : 0;
+      rows2.push(['TOTAL EQUIPO','—',totalTasks,totalComp,totalProg,totalBloq,totalNI,avgTotal,cumplTotal]);
+
+      const wsData2 = [
+        ['INICIATIVAS – BC SALUD · Resumen por Proyecto','','','','','','','',''],
+        [`Generado: ${now}`,'','','','','','','',''],
+        [],
+        headers2,
+        ...rows2,
+      ];
+      const ws2 = XLSX.utils.aoa_to_sheet(wsData2);
+      ws2['!cols']=[{wch:30},{wch:10},{wch:11},{wch:12},{wch:12},{wch:11},{wch:13},{wch:18},{wch:16}];
+      ws2['!merges']=[{s:{r:0,c:0},e:{r:0,c:8}},{s:{r:1,c:0},e:{r:1,c:8}}];
+
+      // Header row styles
+      for(let C=0;C<=8;C++){
+        const addr=XLSX.utils.encode_cell({r:3,c:C});
+        if(!ws2[addr]) ws2[addr]={v:'',t:'s'};
+        ws2[addr].s={fill:{fgColor:{rgb:'1A2335'}},font:{bold:true,color:{rgb:'FFFFFF'},name:'Arial',sz:9},alignment:{horizontal:'center',vertical:'center'}};
+      }
+      if(ws2['A1']) ws2['A1'].s={font:{bold:true,sz:13,name:'Arial',color:{rgb:'E85F1E'}},fill:{fgColor:{rgb:'FEF3E5'}}};
+
+      // Data rows styling + percentage format
+      rows2.forEach((row, ri) => {
+        const excelRow = 4 + ri;
+        const isTotal = ri === rows2.length - 1;
+        for(let C=0;C<=8;C++){
+          const addr=XLSX.utils.encode_cell({r:excelRow,c:C});
+          if(!ws2[addr]) continue;
+          ws2[addr].s = ws2[addr].s || {};
+          if(isTotal){
+            ws2[addr].s.fill={fgColor:{rgb:'1A2335'}};
+            ws2[addr].s.font={bold:true,color:{rgb:'FFFFFF'},name:'Arial',sz:10};
+          } else if(ri%2===0){
+            ws2[addr].s.fill={fgColor:{rgb:'F9FAFB'}};
+          }
+          ws2[addr].s.alignment={horizontal:'center'};
+        }
+        // Percentage columns
+        [7,8].forEach(C => {
+          const addr=XLSX.utils.encode_cell({r:excelRow,c:C});
+          if(ws2[addr]){ws2[addr].t='n';ws2[addr].z='0.0%';
+            if(!isTotal){
+              const v=ws2[addr].v||0;
+              const color = C===8 ? (v>=0.95?'0A7C55':v>=0.90?'B05800':'C0392B') : 'E85F1E';
+              ws2[addr].s={font:{bold:true,color:{rgb:color},name:'Arial',sz:10},fill:{fgColor:{rgb:isTotal?'1A2335':'FEF3E5'}},alignment:{horizontal:'center'}};
+            }
+          }
+        });
+      });
+
+      XLSX.utils.book_append_sheet(wb, ws2, 'Resumen Proyectos');
+    }
+
+    // Generate file
+    const dateStr = new Date().toISOString().slice(0,10);
+    const fileName = `Iniciativas_BC_Salud_${dateStr}.xlsx`;
+    XLSX.writeFile(wb, fileName, {bookType:'xlsx', type:'binary', cellStyles:true});
+    showToast('✓ Reporte descargado: '+fileName);
+  } catch(err) {
+    showToast('Error generando reporte: '+err.message, true);
+    console.error(err);
+  } finally {
+    btn.disabled=false; btn.textContent='⬇ Descargar .xlsx';
+    closeDownloadModal();
+  }
 }
 
 // ─── INIT ─────────────────────────────────────────────────

@@ -8,12 +8,15 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light')}catch(e){}</script>
 <style>
 :root{
   --brand:#E85F1E;--brand2:#1E4FA3;
   --bg:#F4F5F7;--surface:#FFFFFF;--surface2:#F9FAFB;
+  --surface3:#F0F2F5;--surface4:#FAFBFC;--track-bg:#E8EBF0;
   --border:#E2E5EA;--border2:#CBD0D8;
-  --text:#1A2335;--text2:#4A5568;--text3:#8A9BB0;
+  --text:#1A2335;--text2:#4A5568;--text3:#64748B;
+  --nav-width:220px;--sidebar-bg:#1A2335;
   --green:#0A7C55;--green-bg:#E8F7F2;
   --blue:#1563BB;--blue-bg:#EAF1FC;
   --amber:#B05800;--amber-bg:#FEF3E5;
@@ -104,7 +107,9 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
 .card-semaforo{font-size:11px;position:absolute;top:7px;right:8px}
 .card-prog{margin-top:5px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
 .card-prog-fill{height:100%;border-radius:2px}
-.empty-col{padding:20px 10px;text-align:center;font-size:11px;color:var(--text3)}
+.empty-col{padding:24px 10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
+.empty-col svg{opacity:.35;margin-bottom:4px}
+.empty-col-text{font-size:11px;color:var(--text3);font-weight:500}
 
 /* GANTT */
 .gantt-wrap{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:28px;box-shadow:var(--shadow)}
@@ -112,14 +117,14 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
 .gantt-table{width:100%;border-collapse:collapse;min-width:1100px}
 .gantt-table th{background:#1A2335;color:#fff;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:9px 12px;border-bottom:2px solid var(--brand);text-align:left;white-space:nowrap}
 .gantt-table td{padding:6px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
-.gantt-proj-row td{background:#F0F2F5;font-weight:700;font-size:12px}
+.gantt-proj-row td{background:var(--surface3);font-weight:700;font-size:12px}
 .gantt-hito-row td{background:var(--surface)}
-.gantt-hito-row:hover td{background:#FAFBFC}
+.gantt-hito-row:hover td{background:var(--surface4)}
 .gname{font-size:12px;font-weight:500;color:var(--text);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gproj-name{font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px}
-.gtrack{width:100%;min-width:420px;height:18px;background:#E8EBF0;border-radius:4px;position:relative;overflow:visible;margin-top:10px}
+.gtrack{width:100%;min-width:420px;height:18px;background:var(--track-bg);border-radius:4px;position:relative;overflow:visible;margin-top:10px}
 .gbar{position:absolute;height:100%;border-radius:4px;top:0}
-.gweek-tick{position:absolute;top:-14px;font-size:8px;font-weight:600;color:#fff;white-space:nowrap;transform:translateX(-50%);background:#1A2335;padding:1px 4px;border-radius:3px}
+.gweek-tick{position:absolute;top:-14px;font-size:8px;font-weight:600;color:#fff;white-space:nowrap;transform:translateX(-50%);background:var(--sidebar-bg);padding:1px 4px;border-radius:3px}
 .gweek-line{position:absolute;top:0;height:18px;width:1px;background:rgba(255,255,255,.4)}
 .gmonth-hdr{position:absolute;top:-26px;font-size:9px;font-weight:700;color:var(--brand);letter-spacing:.05em;text-transform:uppercase}
 .gpct{font-size:11px;font-weight:600;color:var(--text2);text-align:right;width:34px}
@@ -184,6 +189,26 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+/* Card entrance stagger */
+.col-body .card{animation:cardIn .2s ease both}
+.col-body .card:nth-child(1){animation-delay:.03s}
+.col-body .card:nth-child(2){animation-delay:.06s}
+.col-body .card:nth-child(3){animation-delay:.09s}
+.col-body .card:nth-child(4){animation-delay:.12s}
+.col-body .card:nth-child(5){animation-delay:.15s}
+.col-body .card:nth-child(n+6){animation-delay:.18s}
+/* Skeleton shimmer */
+.skeleton{background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%);background-size:800px 100%;animation:shimmer 1.4s infinite;border-radius:6px}
+/* Loading overlay mejorado */
+.loading-overlay{background:var(--bg)!important}
+.loading-spinner{border-color:var(--border)!important;border-top-color:var(--brand)!important}
+/* Drag & drop */
+.card[draggable="true"]{cursor:grab}
+.card.dragging{opacity:.45;transform:rotate(1.5deg) scale(.97);cursor:grabbing;box-shadow:var(--shadow-lg)}
+.col.drag-over{background:rgba(232,95,30,.06);outline:2px dashed var(--brand);outline-offset:-4px}
+.col.drag-over .col-body{background:transparent}
 
 /* PRESUPUESTO */
 .budget-table-wrap{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow)}
@@ -192,8 +217,8 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
 .budget-table th:first-child{text-align:left}
 .budget-table td{padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle;text-align:center}
 .budget-table td:first-child{text-align:left}
-.budget-table tr:nth-child(even) td{background:#F9FAFB}
-.budget-table tr:hover td{background:#F0F2F5}
+.budget-table tr:nth-child(even) td{background:var(--surface2)}
+.budget-table tr:hover td{background:var(--surface3)}
 .budget-table tr.total-row td{background:#1A2335!important;color:#fff;font-weight:700;font-size:12px}
 .budget-table tr.total-row td:first-child{border-radius:0 0 0 var(--radius)}
 .budget-pct-bar{height:6px;background:#E2E5EA;border-radius:3px;overflow:hidden;margin-top:4px}
@@ -261,6 +286,171 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
 .bsb-sub{font-size:10px;color:var(--text3)}
 .proj-alert{font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;display:inline-flex;align-items:center;gap:3px}
 
+/* ─── LAYOUT SHELL ──────────────────────────── */
+html,body{height:100%;overflow:hidden}
+.app-shell{display:flex;height:100vh;overflow:hidden}
+
+/* ─── SIDEBAR ───────────────────────────────── */
+.sidebar{width:var(--nav-width);background:var(--sidebar-bg);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;overflow-x:hidden;transition:width .2s ease;z-index:150}
+.sidebar.collapsed{width:60px}
+
+.sidebar-brand{display:flex;align-items:center;gap:10px;padding:18px 14px 16px;border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0;overflow:hidden}
+.sidebar-logo{width:34px;height:34px;background:var(--brand);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sidebar-logo svg{width:18px;height:18px;fill:#fff}
+.sidebar-brand-text{overflow:hidden;min-width:0}
+.sidebar-title{font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-sub{font-size:11px;color:rgba(255,255,255,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.sidebar-section-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);padding:14px 16px 5px;white-space:nowrap;overflow:hidden}
+
+.sidebar-nav{display:flex;flex-direction:column;gap:2px;padding:0 8px}
+.sidebar-nav .nav-tab{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:7px;font-size:13px;font-weight:500;color:rgba(255,255,255,.65);cursor:pointer;transition:.15s;border-bottom:none!important;user-select:none;white-space:nowrap;overflow:hidden}
+.sidebar-nav .nav-tab svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.sidebar-nav .nav-tab:hover:not(.active){background:rgba(255,255,255,.08);color:#fff}
+.sidebar-nav .nav-tab.active{background:rgba(232,95,30,.2);color:#E85F1E;font-weight:600}
+
+.sidebar-divider{height:1px;background:rgba(255,255,255,.1);margin:10px 16px}
+
+.sidebar-quarters{padding:0 8px;display:flex;flex-direction:column;gap:3px}
+.sidebar-quarters .quarter-tab{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:7px;font-size:12px;font-weight:600;color:rgba(255,255,255,.55);border:none;background:transparent;cursor:pointer;transition:.15s;white-space:nowrap;width:100%;text-align:left}
+.sidebar-quarters .quarter-tab:hover{background:rgba(255,255,255,.08);color:#fff;border-color:transparent}
+.sidebar-quarters .quarter-tab.active{background:var(--brand);color:#fff;border-color:transparent}
+.sidebar-quarters .quarter-tab .q-badge{background:rgba(255,255,255,.2)}
+
+.quarter-add-btn{margin:6px 8px 0;width:calc(100% - 16px);text-align:left;font-size:11px;font-weight:600;padding:6px 10px;border-radius:7px;border:1.5px dashed rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.4);cursor:pointer;transition:.15s}
+.quarter-add-btn:hover{border-color:var(--brand);color:var(--brand)}
+
+.sidebar-bottom{margin-top:auto;padding:12px 8px 16px;display:flex;flex-direction:column;gap:6px;border-top:1px solid rgba(255,255,255,.1);flex-shrink:0}
+.sidebar-bottom .btn{justify-content:center;width:100%;font-size:12px;padding:8px 10px;border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:rgba(255,255,255,.75)}
+.sidebar-bottom .btn:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.35);color:#fff}
+.sidebar-bottom .btn-primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.sidebar-bottom .btn-primary:hover{background:#cc4e12;border-color:#cc4e12;color:#fff}
+.sidebar-bottom .btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+/* Collapsed sidebar — hide text labels */
+.sidebar.collapsed .sidebar-brand-text,
+.sidebar.collapsed .sidebar-section-lbl,
+.sidebar.collapsed .sidebar-nav .nav-tab span,
+.sidebar.collapsed .sidebar-quarters,
+.sidebar.collapsed .quarter-add-btn,
+.sidebar.collapsed .sidebar-bottom .btn span{display:none}
+.sidebar.collapsed .sidebar-brand{padding:18px 13px}
+.sidebar.collapsed .sidebar-nav .nav-tab{justify-content:center;padding:10px}
+.sidebar.collapsed .sidebar-bottom .btn{padding:10px}
+
+/* ─── CONTENT AREA ──────────────────────────── */
+.content-area{flex:1;display:flex;flex-direction:column;overflow-y:auto;min-width:0}
+.topbar{width:100%}
+
+/* Sidebar toggle in topbar */
+.sidebar-toggle{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:7px;cursor:pointer;color:var(--text2);transition:.15s;flex-shrink:0}
+.sidebar-toggle:hover{background:var(--surface2);color:var(--text)}
+.sidebar-toggle svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.topbar-sync{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3)}
+
+/* SVG icons in topbar buttons */
+.btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+/* Hide old quarter-selector-wrap */
+.quarter-selector-wrap{display:none!important}
+
+/* ─── FONT SIZE FIXES (min 11px) ────────────── */
+.metric-lbl,.metric-sub{font-size:11px}
+.month-cell-name,.month-cell-detail{font-size:11px}
+.card-name{font-size:12px}
+.card-dates,.card-weight{font-size:11px}
+.form-group label{font-size:11px}
+.chart-title{font-size:12px}
+.col-hdr-title{font-size:12px}
+.bsb-lbl,.budget-kpi-lbl{font-size:11px}
+.budget-stat-lbl,.budget-month-cell-name,.budget-month-kpi-hdr{font-size:10px}
+.budget-month-plan{font-size:11px}
+.sec-hdr h2{font-size:12px}
+
+/* ─── HARDCODED COLOR → VARIABLES ───────────── */
+.gantt-table th,.budget-table th,.budget-table tr.total-row td{background:var(--sidebar-bg)}
+.budget-prog-plan{background:var(--sidebar-bg)}
+
+/* ─── RESPONSIVE ────────────────────────────── */
+@media(max-width:900px){
+  .sidebar{position:fixed;top:0;left:0;height:100vh;z-index:300;transform:translateX(-100%);transition:transform .25s ease,width .2s ease}
+  .sidebar.mobile-open{transform:translateX(0)}
+  .metrics{grid-template-columns:repeat(3,1fr)!important}
+}
+@media(max-width:600px){
+  .metrics{grid-template-columns:repeat(2,1fr)!important}
+  .kanban{grid-template-columns:1fr 1fr!important}
+  .main{padding:14px 16px}
+}
+
+/* ─── DARK MODE ─────────────────────────────── */
+[data-theme="dark"]{
+  --bg:#111827;
+  --surface:#1C2233;
+  --surface2:#232B3E;
+  --surface3:#29304A;
+  --surface4:#2F3850;
+  --border:#2C3650;
+  --border2:#3A4565;
+  --text:#E1E7F0;
+  --text2:#8897B3;
+  --text3:#5E6E87;
+  --track-bg:#29304A;
+  --shadow:0 1px 4px rgba(0,0,0,.4),0 4px 12px rgba(0,0,0,.3);
+  --shadow-lg:0 4px 24px rgba(0,0,0,.5);
+  --sidebar-bg:#0D1320;
+}
+[data-theme="dark"] .loading-overlay{background:rgba(17,24,39,.92)}
+[data-theme="dark"] .gweek-line{background:rgba(255,255,255,.12)}
+[data-theme="dark"] .proj-bar-wrap{background:rgba(255,255,255,.08)}
+[data-theme="dark"] .proj-hito-row{border-bottom-color:rgba(255,255,255,.06)}
+[data-theme="dark"] .budget-pct-bar{background:var(--border)}
+:root{
+  --proj-ok-bg:#F0FBF6;--proj-warn-bg:#FEF9F0;--proj-bad-bg:#FDF2F2;
+}
+[data-theme="dark"]{
+  --proj-ok-bg:rgba(10,124,85,.15);--proj-warn-bg:rgba(176,88,0,.15);--proj-bad-bg:rgba(192,57,43,.15);
+}
+[data-theme="dark"] .filters select,
+[data-theme="dark"] .filters input{color-scheme:dark}
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group textarea{color-scheme:dark}
+/* Theme toggle button */
+#theme-toggle{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:7px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;transition:.15s;flex-shrink:0}
+#theme-toggle:hover{border-color:var(--brand);color:var(--brand);background:var(--surface2)}
+#theme-toggle svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* Notifications */
+.notif-wrap{position:relative;flex-shrink:0}
+.notif-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:7px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;transition:.15s;position:relative}
+.notif-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--surface2)}
+.notif-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.notif-badge{position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--surface);pointer-events:none}
+.notif-panel{display:none;position:absolute;top:calc(100% + 10px);right:0;width:320px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:500;overflow:hidden}
+.notif-panel.open{display:block}
+.notif-panel-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text)}
+.notif-list{max-height:360px;overflow-y:auto}
+.notif-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);transition:.15s;cursor:default}
+.notif-item:last-child{border-bottom:none}
+.notif-item:hover{background:var(--surface2)}
+.notif-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.notif-text{flex:1;min-width:0}
+.notif-name{font-size:12px;font-weight:500;color:var(--text);line-height:1.3;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.notif-meta{font-size:10px;color:var(--text3)}
+.notif-empty{padding:24px 16px;text-align:center;font-size:12px;color:var(--text3)}
+/* Global search */
+.topbar-search{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:0 10px;height:34px;min-width:200px;max-width:280px;flex:1;transition:.15s}
+.topbar-search:focus-within{border-color:var(--brand);background:var(--surface)}
+.topbar-search svg{width:14px;height:14px;stroke:var(--text3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.topbar-search input{border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none;flex:1;min-width:0}
+.topbar-search input::placeholder{color:var(--text3)}
+.search-clear{display:none;border:none;background:none;cursor:pointer;padding:2px;color:var(--text3);flex-shrink:0}
+.search-clear svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+.search-clear:hover{color:var(--text)}
+.search-clear.visible{display:flex}
+/* Search highlight */
+.search-highlight{background:rgba(232,95,30,.25);border-radius:2px;padding:0 1px}
+
 </style>
 </head>
 <body>
@@ -270,40 +460,113 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
   <div class="loading-text">Cargando datos del equipo...</div>
 </div>
 
+<div class="app-shell">
+
+<!-- ═══ SIDEBAR ═══════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+
+  <!-- Brand -->
+  <div class="sidebar-brand">
+    <div class="sidebar-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.5l7.5 3.75-7.5 3.75L4.5 8.25 12 4.5zm-8.5 5.2l8.5 4.25v7.55L3.5 17.25V9.7zm10 11.8v-7.55l8.5-4.25v7.55L13.5 21.5z"/></svg>
+    </div>
+    <div class="sidebar-brand-text">
+      <div class="sidebar-title">BC Salud</div>
+      <div class="sidebar-sub">La Positiva Seguros</div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <div class="sidebar-section-lbl">Vistas</div>
+  <nav class="sidebar-nav">
+    <div class="nav-tab active" onclick="setView('kanban',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Kanban</span>
+    </div>
+    <div class="nav-tab" onclick="setView('gantt',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Cronograma</span>
+    </div>
+    <div class="nav-tab" onclick="setView('graficos',this)">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+      <span>Gráficos</span>
+    </div>
+    <div class="nav-tab" onclick="setView('proyectos',this)">
+      <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      <span>Por Proyecto</span>
+    </div>
+    <div class="nav-tab" onclick="setView('presupuesto',this)">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span>Presupuesto</span>
+    </div>
+  </nav>
+
+  <!-- Cuatrimestre -->
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-section-lbl">Cuatrimestre</div>
+  <div id="quarter-tabs" class="sidebar-quarters"></div>
+  <button class="quarter-add-btn" onclick="openAddQuarter()">＋ Nuevo cuatrimestre</button>
+
+  <!-- Acciones -->
+  <div class="sidebar-bottom">
+    <button class="btn btn-primary" onclick="openAddHito()">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Nuevo hito</span>
+    </button>
+    <button class="btn" onclick="openAddProject()">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Nuevo proyecto</span>
+    </button>
+  </div>
+
+</aside>
+
+<!-- ═══ CONTENT AREA ═══════════════════════════ -->
+<div class="content-area">
+
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="topbar-left">
-    <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.5l7.5 3.75-7.5 3.75L4.5 8.25 12 4.5zm-8.5 5.2l8.5 4.25v7.55L3.5 17.25V9.7zm10 11.8v-7.55l8.5-4.25v7.55L13.5 21.5z"/></svg></div>
-    <div class="topbar-titles">
-      <div class="topbar-title">Iniciativas – BC Salud</div>
-      <div class="topbar-sub">
-        <span class="sync-dot" id="sync-dot"></span>
-        <span id="sync-label">Seguimiento de Iniciativas · La Positiva Seguros</span>
-      </div>
+    <div class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('collapsed')" title="Colapsar menú">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </div>
+    <div class="topbar-sync">
+      <span class="sync-dot" id="sync-dot"></span>
+      <span id="sync-label">Conectado · datos en tiempo real</span>
     </div>
   </div>
-  <div class="topbar-right">
-    <button class="btn" onclick="openDownloadModal()" title="Descargar reporte Excel" style="gap:6px">📥 Reporte</button>
-    <button class="btn" onclick="openDeleteProject()" style="color:var(--red);border-color:var(--red)" title="Eliminar proyecto">🗑</button>
-    <button class="btn" onclick="openAddProject()">＋ Proyecto</button>
-    <button class="btn btn-primary" onclick="openAddHito()">＋ Hito</button>
+  <div class="topbar-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="global-search" placeholder="Buscar hitos o proyectos…" oninput="onGlobalSearch(this.value)" autocomplete="off">
+    <button class="search-clear" id="search-clear" onclick="clearSearch()" title="Limpiar">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
   </div>
-</div>
-
-<!-- NAV -->
-<div class="nav">
-  <div class="nav-tab active" onclick="setView('kanban',this)">Kanban</div>
-  <div class="nav-tab" onclick="setView('gantt',this)">Cronograma</div>
-  <div class="nav-tab" onclick="setView('graficos',this)">Gráficos</div>
-  <div class="nav-tab" onclick="setView('proyectos',this)">Por Proyecto</div>
-  <div class="nav-tab" onclick="setView('presupuesto',this)">💰 Presupuesto</div>
-</div>
-
-<!-- QUARTER SELECTOR -->
-<div class="quarter-selector-wrap" id="quarter-selector-wrap">
-  <div class="quarter-selector-lbl">Cuatrimestre:</div>
-  <div id="quarter-tabs" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-  <button class="quarter-add-btn" onclick="openAddQuarter()">＋ Nuevo cuatrimestre</button>
+  <div class="topbar-right">
+    <div class="notif-wrap" id="notif-wrap">
+      <button class="notif-btn" id="notif-btn" onclick="toggleNotifPanel()" title="Alertas">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+      </button>
+      <div class="notif-panel" id="notif-panel">
+        <div class="notif-panel-hdr">
+          <span>Alertas del equipo</span>
+          <button onclick="toggleNotifPanel()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px">×</button>
+        </div>
+        <div class="notif-list" id="notif-list"></div>
+      </div>
+    </div>
+    <button id="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
+      <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="btn" onclick="openDownloadModal()" title="Descargar reporte Excel">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Reporte
+    </button>
+    <button class="btn" onclick="openDeleteProject()" style="color:var(--red);border-color:var(--red)" title="Eliminar proyecto">
+      <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+    </button>
+  </div>
 </div>
 
 <div class="main">
@@ -341,7 +604,6 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
     <select id="bf-quarter" onchange="onBudgetQuarterChange()" style="width:130px"></select>
     <span class="filter-lbl">Proyecto:</span>
     <select id="bf-proj" onchange="renderPresupuesto()" style="width:220px"><option value="all">Todos los proyectos</option></select>
-    <span id="bf-month-pills" style="display:flex;gap:5px;flex-wrap:wrap;margin-left:4px"></span>
   </div>
 
   <div id="view-kanban" class="view-section"></div>
@@ -349,7 +611,10 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
   <div id="view-graficos" class="view-section hidden"></div>
   <div id="view-proyectos" class="view-section hidden"></div>
   <div id="view-presupuesto" class="view-section hidden"></div>
-</div>
+</div><!-- /.main -->
+
+</div><!-- /.content-area -->
+</div><!-- /.app-shell -->
 
 <!-- MODAL EDITAR HITO -->
 <div class="modal-overlay" id="modal-hito-overlay" onclick="closeModalHito(event)">
@@ -559,6 +824,180 @@ body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
 <div class="toast" id="toast"></div>
 
 <script>
+// ─── THEME ───────────────────────────────────────────────
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme') || 'light';
+  const nxt = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', nxt);
+  try{ localStorage.setItem('theme', nxt); }catch(e){}
+  updateThemeIcon(nxt);
+  // Re-render theme-sensitive views
+  if(currentView === 'graficos') renderGraficos();
+  if(currentView === 'proyectos') renderPorProyecto();
+}
+function updateThemeIcon(theme){
+  const btn = document.getElementById('theme-toggle');
+  if(!btn) return;
+  btn.innerHTML = theme === 'dark'
+    ? '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+    : '<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+}
+// Sync icon with current theme on load
+(function(){ updateThemeIcon(document.documentElement.getAttribute('data-theme') || 'light'); })();
+
+// ─── BÚSQUEDA GLOBAL ─────────────────────────────────────
+let globalSearchQuery = '';
+function onGlobalSearch(val){
+  globalSearchQuery = val.trim().toLowerCase();
+  const clearBtn = document.getElementById('search-clear');
+  if(clearBtn) clearBtn.classList.toggle('visible', globalSearchQuery.length > 0);
+  renderCurrentView();
+}
+function clearSearch(){
+  globalSearchQuery = '';
+  const inp = document.getElementById('global-search');
+  if(inp) inp.value = '';
+  const clearBtn = document.getElementById('search-clear');
+  if(clearBtn) clearBtn.classList.remove('visible');
+  renderCurrentView();
+}
+function matchesSearch(text){
+  if(!globalSearchQuery) return true;
+  return (text||'').toLowerCase().includes(globalSearchQuery);
+}
+function highlightSearch(text){
+  if(!globalSearchQuery || !text) return text;
+  const re = new RegExp('('+globalSearchQuery.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return text.replace(re,'<mark class="search-highlight">$1</mark>');
+}
+function renderCurrentView(){
+  if(currentView==='kanban') renderKanban();
+  else if(currentView==='gantt') renderGantt();
+  else if(currentView==='graficos') renderGraficos();
+  else if(currentView==='proyectos') renderPorProyecto();
+  else if(currentView==='presupuesto') renderPresupuesto();
+}
+
+// ─── NOTIFICACIONES ───────────────────────────────────────
+function renderNotifications(){
+  const badge = document.getElementById('notif-badge');
+  const list  = document.getElementById('notif-list');
+  if(!badge || !list) return;
+
+  const now = new Date(); now.setHours(0,0,0,0);
+  const WARN = 7; // días
+
+  const overdue = tasks.filter(t=>{
+    const fe = new Date(t.fin+'T00:00:00');
+    return fe < now && t.status !== 'Completado';
+  }).sort((a,b)=>new Date(a.fin)-new Date(b.fin));
+
+  const upcoming = tasks.filter(t=>{
+    const fe = new Date(t.fin+'T00:00:00');
+    const d  = Math.ceil((fe - now) / 86400000);
+    return d >= 0 && d <= WARN && t.status !== 'Completado';
+  }).sort((a,b)=>new Date(a.fin)-new Date(b.fin));
+
+  const total = overdue.length + upcoming.length;
+  badge.textContent = total;
+  badge.style.display = total > 0 ? 'flex' : 'none';
+
+  if(!total){
+    list.innerHTML = '<div class="notif-empty">✓ Sin alertas pendientes</div>';
+    return;
+  }
+
+  const proj = id => projects.find(p=>p.id===id);
+  const daysDiff = fin => {
+    const fe = new Date(fin+'T00:00:00');
+    return Math.ceil((fe - now) / 86400000);
+  };
+
+  list.innerHTML =
+    (overdue.length ? `<div style="padding:7px 14px 3px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--red)">Vencidos (${overdue.length})</div>` : '') +
+    overdue.map(t=>{
+      const p = proj(t.proj);
+      const d = daysDiff(t.fin);
+      return `<div class="notif-item">
+        <div class="notif-dot" style="background:var(--red)"></div>
+        <div class="notif-text">
+          <div class="notif-name" title="${t.name}">${t.name}</div>
+          <div class="notif-meta">${p?p.name:''} · venció hace ${Math.abs(d)} día${Math.abs(d)!==1?'s':''}</div>
+        </div>
+      </div>`;
+    }).join('') +
+    (upcoming.length ? `<div style="padding:7px 14px 3px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--amber)">Por vencer (${upcoming.length})</div>` : '') +
+    upcoming.map(t=>{
+      const p = proj(t.proj);
+      const d = daysDiff(t.fin);
+      return `<div class="notif-item">
+        <div class="notif-dot" style="background:var(--amber)"></div>
+        <div class="notif-text">
+          <div class="notif-name" title="${t.name}">${t.name}</div>
+          <div class="notif-meta">${p?p.name:''} · vence en ${d} día${d!==1?'s':''}</div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function toggleNotifPanel(){
+  const panel = document.getElementById('notif-panel');
+  if(panel) panel.classList.toggle('open');
+}
+
+// Close notif panel when clicking outside
+document.addEventListener('click', e=>{
+  const wrap = document.getElementById('notif-wrap');
+  if(wrap && !wrap.contains(e.target)){
+    const panel = document.getElementById('notif-panel');
+    if(panel) panel.classList.remove('open');
+  }
+});
+
+// ─── DRAG & DROP KANBAN ───────────────────────────────────
+let draggedTaskId = null;
+function onCardDragStart(e, taskId){
+  draggedTaskId = taskId;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(()=>e.target.classList.add('dragging'), 0);
+}
+function onCardDragEnd(e){
+  e.target.classList.remove('dragging');
+  document.querySelectorAll('.col.drag-over').forEach(c=>c.classList.remove('drag-over'));
+}
+function onColDragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+function onColDragLeave(e){
+  if(!e.currentTarget.contains(e.relatedTarget)){
+    e.currentTarget.classList.remove('drag-over');
+  }
+}
+async function onColDrop(e, newStatus){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if(draggedTaskId === null) return;
+  const task = tasks.find(t=>t.id===draggedTaskId);
+  if(!task || task.status === newStatus){ draggedTaskId=null; return; }
+  // Optimistic update
+  task.status = newStatus;
+  if(newStatus==='Completado') task.pct = 100;
+  renderKanban();
+  // Persist to Supabase
+  const update = {status: newStatus};
+  if(newStatus==='Completado') update.pct = 100;
+  const {error} = await db.from('tasks').update(update).eq('id', draggedTaskId);
+  if(error){
+    showToast('Error al mover hito: '+error.message, true);
+    await loadAll();
+  } else {
+    renderNotifications();
+  }
+  draggedTaskId = null;
+}
+
 // ─── SUPABASE ────────────────────────────────────────────
 const SUPABASE_URL = 'https://gnijqwvpwdqdpdegmrsa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_mK1aHjTvf9lTvJ1c8Wmbug_vRkyR1O-';
@@ -575,7 +1014,7 @@ let allProjectsCache = [];
 // Budget state
 let budgets = [];
 let budgetExec = [];
-let budgetActivePeriod = 'all';
+// budgetActivePeriod removed (month filter eliminated)
 let budgetSelectedQuarterId = null;
 
 // Quarter month mapping (fixed C1/C2/C3)
@@ -680,6 +1119,7 @@ async function loadAll() {
     renderQuarterSelector();
     buildBudgetFilters();
     renderAll();
+    renderNotifications();
   } catch(e) {
     showToast('Error cargando datos: '+e.message, true);
   } finally {
@@ -708,7 +1148,18 @@ function getFiltered() {
   const p=document.getElementById('filt-proj').value;
   const s=document.getElementById('filt-status').value;
   const q=(document.getElementById('filt-search').value||'').toLowerCase();
-  return tasks.filter(t=>(p==='all'||t.proj===p)&&(s==='all'||t.status===s)&&(!q||t.name.toLowerCase().includes(q)));
+  return tasks.filter(t=>{
+    if(p!=='all'&&t.proj!==p) return false;
+    if(s!=='all'&&t.status!==s) return false;
+    if(q&&!t.name.toLowerCase().includes(q)) return false;
+    // Global search: match hito name or project name
+    if(globalSearchQuery){
+      const proj=projects.find(pr=>pr.id===t.proj);
+      const projName=(proj?.name||'').toLowerCase();
+      if(!t.name.toLowerCase().includes(globalSearchQuery)&&!projName.includes(globalSearchQuery)) return false;
+    }
+    return true;
+  });
 }
 
 function rebuildProjectFilter() {
@@ -777,6 +1228,19 @@ function renderMonthProgress() {
 }
 
 // ─── KANBAN ──────────────────────────────────────────────
+function kanbanEmptyState(status, cfg){
+  const paths = {
+    'No Iniciado':'<circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+    'En Progreso':'<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
+    'Bloqueado':'<circle cx="12" cy="12" r="9"/><line x1="4.22" y1="4.22" x2="19.78" y2="19.78"/>',
+    'Completado':'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  };
+  return `<div class="empty-col">
+    <svg viewBox="0 0 24 24" width="30" height="30" stroke="${cfg.color}" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${paths[status]||''}</svg>
+    <div class="empty-col-text">Sin hitos en esta etapa</div>
+  </div>`;
+}
+
 function renderKanban() {
   const f = getFiltered();
   const cols = {}; STATUSES.forEach(s=>cols[s]=[]);
@@ -785,15 +1249,19 @@ function renderKanban() {
     `<div class="sec-hdr"><h2>Kanban de hitos</h2><span style="font-size:11px;color:var(--text3)">${f.length} hitos · clic para editar</span></div>
     <div class="kanban">` + STATUSES.map(s => {
       const sc=STATUS_CFG[s], cards=cols[s];
-      return `<div class="col">
+      return `<div class="col" data-status="${s}"
+          ondragover="onColDragOver(event)" ondragleave="onColDragLeave(event)" ondrop="onColDrop(event,'${s}')">
         <div class="col-hdr">
           <div class="col-hdr-title"><div class="col-hdr-dot" style="background:${sc.color}"></div><span style="color:${sc.color}">${s}</span></div>
           <span class="col-badge" style="background:${sc.bg};color:${sc.color}">${cards.length}</span>
         </div>
         <div class="col-body">
-          ${cards.length===0?'<div class="empty-col">Sin hitos</div>':cards.map(t=>{
+          ${cards.length===0?kanbanEmptyState(s,sc):cards.map(t=>{
             const p=projById(t.proj), sm=getSemaforo(t), pct=t.status==='Completado'?100:t.pct;
-            return `<div class="card" onclick="openEditHito(${t.id})">
+            return `<div class="card" draggable="true"
+              ondragstart="onCardDragStart(event,${t.id})"
+              ondragend="onCardDragEnd(event)"
+              onclick="openEditHito(${t.id})" data-id="${t.id}">
               <span class="card-semaforo" title="${sm.label}">${sm.icon}</span>
               <div class="card-proj" style="background:${p.color}18;color:${p.color}">
                 <div class="card-proj-dot" style="background:${p.color}"></div>${p.name.split('–')[0].trim()}
@@ -914,8 +1382,20 @@ function renderGantt() {
 // ─── GRÁFICOS ─────────────────────────────────────────────
 let chartInstances = {};
 function destroyChart(id){if(chartInstances[id]){chartInstances[id].destroy();delete chartInstances[id];}}
+function getChartTheme(){
+  const dark = document.documentElement.getAttribute('data-theme')==='dark';
+  return {
+    text: dark ? '#8897B3' : '#64748B',
+    grid: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
+    tiempoBg: dark
+      ? ['rgba(10,124,85,.28)','rgba(21,99,187,.28)','rgba(176,88,0,.28)','rgba(192,57,43,.28)']
+      : ['#E8F7F2','#EAF1FC','#FEF3E5','#FDECEB'],
+    tiempoBorder: ['#0A7C55','#1563BB','#B05800','#C0392B'],
+  };
+}
 
 function renderGraficos() {
+  const ct = getChartTheme();
   const f = getFiltered();
   const filtProjId = document.getElementById('filt-proj').value;
   const taskList = filtProjId==='all' ? tasks : tasks.filter(t=>t.proj===filtProjId);
@@ -937,7 +1417,7 @@ function renderGraficos() {
   chartInstances['estado'] = new Chart(document.getElementById('ch-estado'),{
     type:'doughnut',
     data:{labels:STATUSES,datasets:[{data:STATUSES.map(s=>f.filter(t=>t.status===s).length),backgroundColor:STATUSES.map(s=>STATUS_CFG[s].bg),borderColor:STATUSES.map(s=>STATUS_CFG[s].color),borderWidth:2,hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10,family:'DM Sans'},padding:8,boxWidth:10}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:ct.text,font:{size:10,family:'DM Sans'},padding:8,boxWidth:10}}}}
   });
 
   destroyChart('proj');
@@ -950,14 +1430,14 @@ function renderGraficos() {
   chartInstances['proj'] = new Chart(document.getElementById('ch-proj'),{
     type:'bar',
     data:{labels:visibleProjs.map(p=>p.name.split('–')[0].trim()),datasets:[{label:'Avance %',data:projAvg,backgroundColor:visibleProjs.map(p=>p.color+'44'),borderColor:visibleProjs.map(p=>p.color),borderWidth:2,borderRadius:6}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{font:{size:10},callback:v=>v+'%'}},x:{ticks:{font:{size:9}}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{color:ct.text,font:{size:10},callback:v=>v+'%'},grid:{color:ct.grid}},x:{ticks:{color:ct.text,font:{size:9}},grid:{color:ct.grid}}}}
   });
 
   destroyChart('dist');
   chartInstances['dist'] = new Chart(document.getElementById('ch-dist'),{
     type:'pie',
     data:{labels:visibleProjs.map(p=>p.name.split('–')[0].trim()),datasets:[{data:visibleProjs.map(p=>f.filter(t=>t.proj===p.id).length),backgroundColor:visibleProjs.map(p=>p.color+'55'),borderColor:visibleProjs.map(p=>p.color),borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10,family:'DM Sans'},padding:6,boxWidth:10}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:ct.text,font:{size:10,family:'DM Sans'},padding:6,boxWidth:10}}}}
   });
 
   destroyChart('mensual');
@@ -969,8 +1449,8 @@ function renderGraficos() {
   const resto = f.length - venc - porV - ok;
   chartInstances['tiempo'] = new Chart(document.getElementById('ch-tiempo'),{
     type:'doughnut',
-    data:{labels:['Completados','En tiempo','Por vencer','Vencidos'],datasets:[{data:[ok,Math.max(0,resto),porV,venc],backgroundColor:['#E8F7F2','#EAF1FC','#FEF3E5','#FDECEB'],borderColor:['#0A7C55','#1563BB','#B05800','#C0392B'],borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10,family:'DM Sans'},padding:6,boxWidth:10}}}}
+    data:{labels:['Completados','En tiempo','Por vencer','Vencidos'],datasets:[{data:[ok,Math.max(0,resto),porV,venc],backgroundColor:ct.tiempoBg,borderColor:ct.tiempoBorder,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:ct.text,font:{size:10,family:'DM Sans'},padding:6,boxWidth:10}}}}
   });
 }
 
@@ -993,10 +1473,10 @@ function renderPorProyecto() {
       const vencidos = pt.filter(t=>{const fe=new Date(t.fin+'T00:00:00');return fe<TODAY&&t.status!=='Completado';}).length;
       const cumplPct = total>0 ? Math.round(((total-vencidos)/total)*100) : 100;
 
-      let cardBg='#FFFFFF', cardBorder=`1.5px solid var(--border)`, cumplColor='var(--green)', cumplBg='var(--green-bg)';
-      if(cumplPct>=95){ cardBg='#F0FBF6'; cardBorder='2px solid #0A7C55'; cumplColor='#0A7C55'; cumplBg='#D4F0E4';}
-      else if(cumplPct>=90){ cardBg='#FEF9F0'; cardBorder='2px solid #B05800'; cumplColor='#B05800'; cumplBg='#FAEEDA';}
-      else { cardBg='#FDF2F2'; cardBorder='2px solid #C0392B'; cumplColor='#C0392B'; cumplBg='#FDECEB';}
+      let cardBg='var(--surface)', cardBorder=`1.5px solid var(--border)`, cumplColor='var(--green)', cumplBg='var(--green-bg)';
+      if(cumplPct>=95){ cardBg='var(--proj-ok-bg)'; cardBorder='2px solid #0A7C55'; cumplColor='#0A7C55'; cumplBg='var(--green-bg)';}
+      else if(cumplPct>=90){ cardBg='var(--proj-warn-bg)'; cardBorder='2px solid #B05800'; cumplColor='#B05800'; cumplBg='var(--amber-bg)';}
+      else { cardBg='var(--proj-bad-bg)'; cardBorder='2px solid #C0392B'; cumplColor='#C0392B'; cumplBg='var(--red-bg)';}
 
       return `<div class="proj-card" style="background:${cardBg};border:${cardBorder}">
         <div class="proj-card-hdr">
@@ -1646,7 +2126,6 @@ function onBudgetQuarterChange() {
   const qId = document.getElementById('bf-quarter')?.value;
   if (!qId) return;
   budgetSelectedQuarterId = qId;
-  budgetActivePeriod = 'all';
   // Get projects that belong to this quarter
   const qProjects = budgets
     .map(b=>b.proj)
@@ -1656,37 +2135,6 @@ function onBudgetQuarterChange() {
   const qProjList = allProjectsCache.filter(p=>p.quarter_id===qId);
   projSel.innerHTML = '<option value="all">Todos los proyectos</option>' +
     qProjList.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
-  // Month pills
-  updateBudgetMonthPills(qId);
-  renderPresupuesto();
-}
-
-function updateBudgetMonthPills(qId) {
-  const q = quarters.find(x=>x.id===qId) || getActiveQuarter();
-  const months = getQuarterMonthsFor(qId);
-  const pillsEl = document.getElementById('bf-month-pills');
-  if (!pillsEl) return;
-  pillsEl.innerHTML = `
-    <button class="bf-pill active" style="color:var(--text2);border-color:var(--border2);background:var(--surface)" onclick="setBudgetPeriod('all',this)">Todo el cuatrimestre</button>
-    ${months.map(m=>`<button class="bf-pill" style="color:${m.color};border-color:${m.color}40;background:${m.color}0D" onclick="setBudgetPeriod('${m.key}',this)">${m.label}</button>`).join('')}
-  `;
-}
-
-function setBudgetPeriod(period, el) {
-  budgetActivePeriod = period;
-  document.querySelectorAll('.bf-pill').forEach(b=>{
-    b.classList.remove('active');
-    b.style.removeProperty('background');
-  });
-  el.classList.add('active');
-  // Set active bg
-  if (period==='all') { el.style.background='#1A2335'; el.style.color='#fff'; el.style.borderColor='#1A2335'; }
-  else {
-    const q=quarters.find(x=>x.id===(budgetSelectedQuarterId||activeQuarterId))||getActiveQuarter();
-    const months=getQuarterMonthsFor(q.id);
-    const m=months.find(x=>x.key===period);
-    if(m){ el.style.background=m.color; el.style.color='#fff'; el.style.borderColor=m.color; }
-  }
   renderPresupuesto();
 }
 
@@ -1703,18 +2151,14 @@ function renderPresupuesto() {
   const filtProjId = document.getElementById('bf-proj')?.value || 'all';
   const visibleProjs = filtProjId==='all' ? allQProjs : allQProjs.filter(p=>p.id===filtProjId);
 
-  // Selected months
-  const selMonths = budgetActivePeriod==='all' ? qMths : qMths.filter(m=>m.key===budgetActivePeriod);
-  const periodLabel = budgetActivePeriod==='all' ? q.label : (qMths.find(m=>m.key===budgetActivePeriod)?.label||'')+' '+q.year;
-
-  // Per-project figures
+  // Per-project figures (always all months of the quarter)
   const rows = visibleProjs.map(p=>{
     const b      = getBudget(p.id);
     const total  = parseFloat(b.presupuesto_total||0);
     const c2     = parseFloat(b.presupuesto_c2||0);
-    const exec   = selMonths.reduce((a,m)=>a+parseFloat(getExec(p.id,m.key).ejecutado||0),0);
-    const plan   = selMonths.reduce((a,m)=>a+parseFloat(getExec(p.id,m.key).planificado||0),0);
-    const restante = Math.max(0, c2-getTotalExec(p.id)); // restante vs full C2
+    const exec   = qMths.reduce((a,m)=>a+parseFloat(getExec(p.id,m.key).ejecutado||0),0);
+    const plan   = qMths.reduce((a,m)=>a+parseFloat(getExec(p.id,m.key).planificado||0),0);
+    const restante = Math.max(0, c2-getTotalExec(p.id));
     const pctExec  = c2>0?(exec/c2*100):0;
     const monthly  = qMths.map(m=>({
       key:m.key, label:m.label, color:m.color,
@@ -1745,7 +2189,7 @@ function renderPresupuesto() {
 
   el.innerHTML = `
     <div class="sec-hdr">
-      <h2>Control de Presupuesto — ${periodLabel}${semAlert}</h2>
+      <h2>Control de Presupuesto — ${q.label}${semAlert}</h2>
       <span style="font-size:11px;color:var(--text3)">${visibleProjs.length} proyecto${visibleProjs.length!==1?'s':''} · ${q.month1_label} a ${q.month4_label} ${q.year}</span>
     </div>
 
@@ -1763,7 +2207,7 @@ function renderPresupuesto() {
         <div class="budget-kpi-bar"><div class="budget-kpi-bar-fill" style="width:100%;background:var(--brand)"></div></div>
       </div>
       <div class="budget-kpi">
-        <div class="budget-kpi-lbl">Ejecutado ${periodLabel}</div>
+        <div class="budget-kpi-lbl">Ejecutado ${q.label}</div>
         <div class="budget-kpi-val" style="color:${totPct>100?'var(--red)':totPct>=90?'var(--amber)':'var(--green)'}">${fmtSoles(totExec)}</div>
         <div class="budget-kpi-sub">${totPct.toFixed(1)}% del ${q.period} ${q.year}</div>
         <div class="budget-kpi-bar"><div class="budget-kpi-bar-fill" style="width:${Math.min(100,totPct)}%;background:${totPct>100?'var(--red)':totPct>=90?'var(--amber)':'var(--green)'}"></div></div>
@@ -1781,11 +2225,8 @@ function renderPresupuesto() {
       ${monthTotals.map(m=>{
         const mPct=m.plan>0?Math.min(150,m.exec/m.plan*100):(m.exec>0?100:0);
         const mColor=mPct>100?'var(--red)':mPct>=90?'var(--amber)':m.color;
-        const isActive=budgetActivePeriod===m.key;
-        return `<div class="budget-month-kpi${isActive?' active-month':''}"
-          style="cursor:pointer;border-color:${isActive?m.color:'var(--border)'}"
-          onclick="setBudgetPeriod('${m.key}',document.querySelector('.bf-pill[onclick*=\'${m.key}\']'))">
-          <div class="budget-month-kpi-hdr" style="color:${m.color}">${m.label} ${q.year}${isActive?' ◀':''}</div>
+        return `<div class="budget-month-kpi">
+          <div class="budget-month-kpi-hdr" style="color:${m.color}">${m.label} ${q.year}</div>
           <div class="budget-month-kpi-exec" style="color:${mColor}">${fmtSoles(m.exec)}</div>
           <div class="budget-month-kpi-plan" style="color:var(--text3)">Plan: ${fmtSoles(m.plan)}</div>
           <div class="budget-month-kpi-pct" style="color:${mColor}">${mPct.toFixed(0)}% ejec.</div>
@@ -1802,10 +2243,8 @@ function renderPresupuesto() {
             <th style="width:190px;text-align:left">Proyecto</th>
             <th>Ppto. Total</th>
             <th>Solicitado ${q.period}</th>
-            ${budgetActivePeriod==='all'
-              ? qMths.map(m=>`<th>${m.label}</th>`).join('')+'<th style="min-width:110px">Total Ejecutado</th>'
-              : `<th>Planificado</th><th>Ejecutado</th>`
-            }
+            ${qMths.map(m=>`<th>${m.label}</th>`).join('')}
+            <th style="min-width:110px">Total Ejecutado</th>
             <th>Restante ${q.period}</th>
             <th style="width:100px">% vs ${q.period}</th>
             <th style="width:60px">Estado</th>
@@ -1822,12 +2261,10 @@ function renderPresupuesto() {
                 if(r.pctExec>100){semIcon='🔴';semColor='var(--red)';semBg='var(--red-bg)';}
                 else if(r.pctExec>=50){semIcon='🟡';semColor='var(--amber)';semBg='var(--amber-bg)';}
                 else{semIcon='🟢';semColor='var(--green)';semBg='var(--green-bg)';}
-                const monthCells = budgetActivePeriod==='all'
-                  ? r.monthly.map(m=>{
-                      const mc=m.exec>0?m.color:'var(--text3)';
-                      return `<td style="font-size:11px;color:${mc};font-weight:${m.exec>0?'700':'400'}">${m.exec>0?fmtSoles(m.exec):'—'}</td>`;
-                    }).join('')+`<td style="font-weight:700;color:${barColor}">${fmtSoles(r.exec)}</td>`
-                  : `<td style="color:var(--text2)">${fmtSoles(r.plan)}</td><td style="font-weight:700;color:${barColor}">${fmtSoles(r.exec)}</td>`;
+                const monthCells = r.monthly.map(m=>{
+                  const mc=m.exec>0?m.color:'var(--text3)';
+                  return `<td style="font-size:11px;color:${mc};font-weight:${m.exec>0?'700':'400'}">${m.exec>0?fmtSoles(m.exec):'—'}</td>`;
+                }).join('')+`<td style="font-weight:700;color:${barColor}">${fmtSoles(r.exec)}</td>`;
                 return `<tr>
                   <td>
                     <div style="display:flex;align-items:center;gap:7px">
@@ -1854,10 +2291,8 @@ function renderPresupuesto() {
             <td>TOTAL</td>
             <td>${fmtSoles(totTotal)}</td>
             <td style="color:#FF6D46">${fmtSoles(totC2)}</td>
-            ${budgetActivePeriod==='all'
-              ? monthTotals.map(m=>`<td style="color:#00CEC5;font-size:11px">${fmtSoles(m.exec)}</td>`).join('')+`<td style="color:#00CEC5">${fmtSoles(totExec)}</td>`
-              : `<td style="color:#AAAAAA">${fmtSoles(totPlan)}</td><td style="color:#00CEC5">${fmtSoles(totExec)}</td>`
-            }
+            ${monthTotals.map(m=>`<td style="color:#00CEC5;font-size:11px">${fmtSoles(m.exec)}</td>`).join('')}
+            <td style="color:#00CEC5">${fmtSoles(totExec)}</td>
             <td style="color:#00CEC5">${fmtSoles(totRest)}</td>
             <td style="color:${totPct>100?'#FF6D46':totPct>=90?'#EF9C21':'#00CEC5'}">${totPct.toFixed(1)}%</td>
             <td></td><td></td>
@@ -2261,16 +2696,10 @@ function getProyeccion(projId) {
   return projected;
 }
 
-// ─── PERIOD SWITCH ────────────────────────────────────────
-function setBudgetPeriod(period, el) {
-  budgetPeriod = period;
-  document.querySelectorAll('.budget-period-tab').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  renderPresupuesto();
-}
+// (duplicate block removed)
 
 // ─── RENDER PRESUPUESTO ───────────────────────────────────
-function renderPresupuesto() {
+function _DUPE_renderPresupuesto() {
   const el = document.getElementById('view-presupuesto');
   const filtBudget = document.getElementById('filt-budget-proj')?.value || 'all';
   const visibleProjs = filtBudget==='all' ? projects : projects.filter(p=>p.id===filtBudget);
@@ -2459,7 +2888,7 @@ function renderPresupuesto() {
 
 
 // ─── MODAL BUDGET ─────────────────────────────────────────
-function openModalBudget(projId, focusMonth) {
+function _DUPE_openModalBudget(projId, focusMonth) {
   const p = projById(projId);
   const b = getBudget(projId);
   document.getElementById('mb-proj').value = projId;
@@ -2489,7 +2918,7 @@ function openModalBudget(projId, focusMonth) {
   if(focusMonth) setTimeout(()=>{ const el=document.getElementById('mb-exec-'+focusMonth); if(el){el.focus();el.select();}},100);
 }
 
-function updateBudgetPreview(projId) {
+function _DUPE_updateBudgetPreview(projId) {
   const c2 = parseFloat(document.getElementById('mb-c2')?.value||0);
   const execNow = ['mayo','junio','julio','agosto'].reduce((a,m)=>{
     return a + parseFloat(document.getElementById('mb-exec-'+m)?.value||0);
@@ -2500,11 +2929,11 @@ function updateBudgetPreview(projId) {
   if(prev) prev.innerHTML = `Ejecución total ingresada: <strong style="color:${color}">${fmtSoles(execNow)}</strong> · ${pct}% del presupuesto C2 (${fmtSoles(c2)})`;
 }
 
-function closeModalBudget() {
+function _DUPE_closeModalBudget() {
   document.getElementById('modal-budget-overlay').classList.remove('open');
 }
 
-async function saveModalBudget() {
+async function _DUPE_saveModalBudget() {
   const projId = document.getElementById('mb-proj').value;
   const btn = document.getElementById('mb-save-btn');
   btn.disabled=true; btn.textContent='Guardando...';

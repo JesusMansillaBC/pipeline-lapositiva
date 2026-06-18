@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -643,6 +642,15 @@ html,body{height:100%;overflow:hidden}
       <div class="form-row full"><div class="form-group"><label>% Avance (0–100)</label><input id="mh-pct" type="number" min="0" max="100"></div></div>
       <div class="form-row full bloq-field" id="bloq-field"><div class="form-group"><label>🔴 Motivo del bloqueo</label><textarea id="mh-bloq" rows="2" placeholder="Describe por qué está bloqueado este hito..."></textarea></div></div>
       <div class="form-row full"><div class="form-group"><label>Notas</label><textarea id="mh-notes" rows="2"></textarea></div></div>
+      <div class="form-row full">
+        <div class="form-group" style="flex-direction:row;align-items:center;gap:10px;background:var(--amber-bg);border:1px solid var(--amber)33;border-radius:8px;padding:10px 12px">
+          <input type="checkbox" id="mh-unplanned" style="width:16px;height:16px;accent-color:var(--amber);flex-shrink:0;cursor:pointer">
+          <div>
+            <label for="mh-unplanned" style="font-weight:600;color:var(--amber);cursor:pointer;margin:0">No planificado</label>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Hito ingresado post-planificación cuatrimestral</div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="modal-ftr">
       <button class="btn" onclick="deleteHito()" style="color:var(--red);border-color:var(--red)">Eliminar</button>
@@ -672,6 +680,15 @@ html,body{height:100%;overflow:hidden}
         </div>
         <div class="form-group"><label>Peso %</label><input id="ah-weight" type="number" min="0" max="100" value="10"></div>
       </div>
+      <div class="form-row full">
+        <div class="form-group" style="flex-direction:row;align-items:center;gap:10px;background:var(--amber-bg);border:1px solid var(--amber)33;border-radius:8px;padding:10px 12px">
+          <input type="checkbox" id="ah-unplanned" style="width:16px;height:16px;accent-color:var(--amber);flex-shrink:0;cursor:pointer">
+          <div>
+            <label for="ah-unplanned" style="font-weight:600;color:var(--amber);cursor:pointer;margin:0">No planificado</label>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Hito ingresado post-planificación cuatrimestral</div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="modal-ftr">
       <button class="btn" onclick="closeAddHito()">Cancelar</button>
@@ -682,13 +699,28 @@ html,body{height:100%;overflow:hidden}
 
 <!-- MODAL NUEVO PROYECTO -->
 <div class="modal-overlay" id="modal-add-proj-overlay" onclick="e=>e.target===document.getElementById('modal-add-proj-overlay')&&closeAddProject()">
-  <div class="modal">
+  <div class="modal" style="width:480px">
     <div class="modal-hdr">
       <div><div class="modal-title">Nuevo proyecto</div></div>
       <button class="modal-close" onclick="closeAddProject()">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-row full"><div class="form-group"><label>Nombre del proyecto</label><input id="ap-name" type="text" placeholder="Ej: Automatización de Suscripción"></div></div>
+      <div class="form-row full"><div class="form-group"><label>Squad</label>
+        <select id="ap-squad">
+          <option value="">— Seleccionar squad —</option>
+          <option value="Squad Centro Médico">Squad Centro Médico</option>
+          <option value="Squad Salud">Squad Salud</option>
+        </select>
+      </div></div>
+      <div class="form-row">
+        <div class="form-group"><label>Cuatrimestre</label>
+          <select id="ap-period"><option value="C1">C1</option><option value="C2" selected>C2</option><option value="C3">C3</option></select>
+        </div>
+        <div class="form-group"><label>Año</label>
+          <select id="ap-year"><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option></select>
+        </div>
+      </div>
       <div class="form-row">
         <div class="form-group"><label>Color</label><input id="ap-color" type="color" value="#1E6FBF" style="height:36px;padding:2px 4px;width:100%"></div>
         <div class="form-group"><label>ID (sin espacios)</label><input id="ap-id" type="text" placeholder="ej: auto_susc"></div>
@@ -697,6 +729,37 @@ html,body{height:100%;overflow:hidden}
     <div class="modal-ftr">
       <button class="btn" onclick="closeAddProject()">Cancelar</button>
       <button class="btn btn-primary" id="ap-save-btn" onclick="saveAddProject()">Crear proyecto</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR PROYECTO -->
+<div class="modal-overlay" id="modal-edit-proj-overlay" onclick="e=>e.target===document.getElementById('modal-edit-proj-overlay')&&closeEditProject()">
+  <div class="modal" style="width:480px">
+    <div class="modal-hdr">
+      <div><div class="modal-title">Editar proyecto</div><div class="modal-subtitle" id="ep-subtitle"></div></div>
+      <button class="modal-close" onclick="closeEditProject()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ep-id">
+      <div class="form-row full"><div class="form-group"><label>Nombre del proyecto</label><input id="ep-name" type="text"></div></div>
+      <div class="form-row full"><div class="form-group"><label>Squad</label>
+        <select id="ep-squad">
+          <option value="">— Sin squad —</option>
+          <option value="Squad Centro Médico">Squad Centro Médico</option>
+          <option value="Squad Salud">Squad Salud</option>
+        </select>
+      </div></div>
+      <div class="form-row">
+        <div class="form-group"><label>Color</label><input id="ep-color" type="color" style="height:36px;padding:2px 4px;width:100%"></div>
+        <div class="form-group"><label>Cuatrimestre</label>
+          <select id="ep-period"><option value="C1">C1</option><option value="C2">C2</option><option value="C3">C3</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn" onclick="closeEditProject()">Cancelar</button>
+      <button class="btn btn-primary" id="ep-save-btn" onclick="saveEditProject()">💾 Guardar</button>
     </div>
   </div>
 </div>
@@ -1264,8 +1327,11 @@ function renderKanban() {
               ondragend="onCardDragEnd(event)"
               onclick="openEditHito(${t.id})" data-id="${t.id}">
               <span class="card-semaforo" title="${sm.label}">${sm.icon}</span>
-              <div class="card-proj" style="background:${p.color}18;color:${p.color}">
-                <div class="card-proj-dot" style="background:${p.color}"></div>${p.name.split('–')[0].trim()}
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">
+                <div class="card-proj" style="background:${p.color}18;color:${p.color};margin-bottom:0;flex:1">
+                  <div class="card-proj-dot" style="background:${p.color}"></div>${p.name.split('–')[0].trim()}
+                </div>
+                ${t.is_unplanned?`<span style="background:var(--amber-bg);color:var(--amber);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;border:1px solid var(--amber)44;flex-shrink:0" title="Hito no planificado">NP</span>`:''}
               </div>
               <div class="card-name">${t.name}</div>
               <div class="card-dates">${fmtDate(t.ini)} → ${fmtDate(t.fin)}</div>
@@ -1412,6 +1478,7 @@ function renderGraficos() {
       <div class="chart-card"><div class="chart-title">Avance por proyecto (%)</div><div class="chart-canvas-wrap"><canvas id="ch-proj"></canvas></div></div>
       <div class="chart-card"><div class="chart-title">Distribución de hitos</div><div class="chart-canvas-wrap"><canvas id="ch-dist"></canvas></div></div>
       <div class="chart-card"><div class="chart-title">Semáforo de cumplimiento</div><div class="chart-canvas-wrap"><canvas id="ch-tiempo"></canvas></div></div>
+      <div class="chart-card" style="grid-column:1/-1"><div class="chart-title">Planificados vs No Planificados por proyecto</div><div class="chart-canvas-wrap" style="height:220px"><canvas id="ch-planif"></canvas></div></div>
     </div>`;
 
   destroyChart('estado');
@@ -1453,6 +1520,29 @@ function renderGraficos() {
     data:{labels:['Completados','En tiempo','Por vencer','Vencidos'],datasets:[{data:[ok,Math.max(0,resto),porV,venc],backgroundColor:ct.tiempoBg,borderColor:ct.tiempoBorder,borderWidth:2}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:ct.text,font:{size:10,family:'DM Sans'},padding:6,boxWidth:10}}}}
   });
+
+  destroyChart('planif');
+  const planifLabels = visibleProjs.map(p=>p.name.split('–')[0].trim());
+  const planifData   = visibleProjs.map(p=>f.filter(t=>t.proj===p.id&&!t.is_unplanned).length);
+  const noplanifData = visibleProjs.map(p=>f.filter(t=>t.proj===p.id&&t.is_unplanned).length);
+  chartInstances['planif'] = new Chart(document.getElementById('ch-planif'),{
+    type:'bar',
+    data:{
+      labels:planifLabels,
+      datasets:[
+        {label:'Planificados',data:planifData,backgroundColor:'#3B82F644',borderColor:'#3B82F6',borderWidth:2,borderRadius:5},
+        {label:'No Planificados',data:noplanifData,backgroundColor:'#F59E0B44',borderColor:'#F59E0B',borderWidth:2,borderRadius:5}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{color:ct.text,font:{size:10,family:'DM Sans'},padding:12,boxWidth:12}}},
+      scales:{
+        y:{beginAtZero:true,ticks:{color:ct.text,font:{size:10},stepSize:1},grid:{color:ct.grid}},
+        x:{ticks:{color:ct.text,font:{size:9}},grid:{color:ct.grid}}
+      }
+    }
+  });
 }
 
 // ─── POR PROYECTO ─────────────────────────────────────────
@@ -1479,11 +1569,20 @@ function renderPorProyecto() {
       else if(cumplPct>=90){ cardBg='var(--proj-warn-bg)'; cardBorder='2px solid #B05800'; cumplColor='#B05800'; cumplBg='var(--amber-bg)';}
       else { cardBg='var(--proj-bad-bg)'; cardBorder='2px solid #C0392B'; cumplColor='#C0392B'; cumplBg='var(--red-bg)';}
 
+      const unplannedCount=pt.filter(t=>t.is_unplanned).length;
+      const squadColor=p.squad==='Squad Centro Médico'?'var(--blue)':'var(--green)';
+      const squadBg=p.squad==='Squad Centro Médico'?'var(--blue-bg)':'var(--green-bg)';
       return `<div class="proj-card" style="background:${cardBg};border:${cardBorder}">
         <div class="proj-card-hdr">
           <div>
-            <div class="proj-name">${p.name}</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px">${pt.length} hitos</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="proj-name">${p.name}</div>
+              <button onclick="event.stopPropagation();openEditProject('${p.id}')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-size:10px;padding:2px 7px;border-radius:5px;cursor:pointer">✏ Editar</button>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap">
+              ${p.squad?`<span style="background:${squadBg};color:${squadColor};font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px">${p.squad}</span>`:''}
+              <span style="font-size:11px;color:var(--text3)">${pt.length} hitos${unplannedCount?` · <span style="color:var(--amber);font-weight:600">${unplannedCount} NP</span>`:''}</span>
+            </div>
             <span class="proj-cumpl-badge" style="background:${cumplBg};color:${cumplColor}">Cumplimiento: ${cumplPct}%</span>
           </div>
           <div class="proj-pct" style="color:${p.color}">${avg}%</div>
@@ -1498,7 +1597,7 @@ function renderPorProyecto() {
           ${pt.map(t=>{
             const sc=STATUS_CFG[t.status], sm=getSemaforo(t);
             return`<div class="proj-hito-row" onclick="openEditHito(${t.id})">
-              <span>${sm.icon} <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px">${t.name}</span></span>
+              <span style="display:flex;align-items:center;gap:5px;min-width:0">${sm.icon} <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.name}</span>${t.is_unplanned?`<span style="background:var(--amber-bg);color:var(--amber);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;flex-shrink:0">NP</span>`:''}</span>
               <span style="display:flex;gap:5px;align-items:center;flex-shrink:0;margin-left:6px">
                 <span style="font-size:10px;color:var(--text3)">${t.weight}%</span>
                 <span class="gstatus-pill" style="background:${sc.bg};color:${sc.color};font-size:9px;padding:1px 6px">${t.status.split(' ')[0]}</span>
@@ -1529,6 +1628,7 @@ function openEditHito(id) {
   document.getElementById('mh-pct').value=t.pct;
   document.getElementById('mh-notes').value=t.notes||'';
   document.getElementById('mh-bloq').value=t.bloq_reason||'';
+  document.getElementById('mh-unplanned').checked=!!t.is_unplanned;
   toggleBloqField(t.status);
   document.getElementById('modal-hito-overlay').classList.add('open');
 }
@@ -1552,6 +1652,7 @@ async function saveHito() {
     status, weight:parseInt(document.getElementById('mh-weight').value)||10,
     pct, notes:document.getElementById('mh-notes').value,
     bloq_reason:status==='Bloqueado'?document.getElementById('mh-bloq').value:'',
+    is_unplanned:document.getElementById('mh-unplanned').checked,
   };
   setSyncing(true);
   const {error}=await db.from('tasks').update(payload).eq('id',id);
@@ -1580,7 +1681,7 @@ async function saveAddHito(){
   const name=document.getElementById('ah-name').value.trim();
   if(!name){alert('El nombre es obligatorio');return;}
   const btn=document.getElementById('ah-save-btn'); btn.disabled=true; btn.textContent='Guardando...';
-  const payload={proj:document.getElementById('ah-proj').value,name,ini:document.getElementById('ah-ini').value,fin:document.getElementById('ah-fin').value,status:document.getElementById('ah-status').value,weight:parseInt(document.getElementById('ah-weight').value)||10,pct:0,notes:'',bloq_reason:''};
+  const payload={proj:document.getElementById('ah-proj').value,name,ini:document.getElementById('ah-ini').value,fin:document.getElementById('ah-fin').value,status:document.getElementById('ah-status').value,weight:parseInt(document.getElementById('ah-weight').value)||10,pct:0,notes:'',bloq_reason:'',is_unplanned:document.getElementById('ah-unplanned').checked};
   setSyncing(true);
   const {error}=await db.from('tasks').insert(payload);
   setSyncing(false); btn.disabled=false; btn.textContent='Agregar';
@@ -1729,13 +1830,51 @@ async function confirmDeleteProject() {
 function openAddProject(){document.getElementById('modal-add-proj-overlay').classList.add('open');}
 function closeAddProject(){document.getElementById('modal-add-proj-overlay').classList.remove('open');}
 
+function openEditProject(projId){
+  const p=allProjectsCache.find(x=>x.id===projId)||projById(projId);
+  if(!p) return;
+  const q=quarters.find(x=>x.id===p.quarter_id)||getActiveQuarter();
+  document.getElementById('ep-id').value=p.id;
+  document.getElementById('ep-name').value=p.name;
+  document.getElementById('ep-color').value=p.color||'#1E6FBF';
+  document.getElementById('ep-squad').value=p.squad||'';
+  document.getElementById('ep-period').value=q.period||'C2';
+  document.getElementById('ep-subtitle').textContent=p.id+' · '+q.label;
+  document.getElementById('modal-edit-proj-overlay').classList.add('open');
+}
+function closeEditProject(){document.getElementById('modal-edit-proj-overlay').classList.remove('open');}
+
+async function saveEditProject(){
+  const projId=document.getElementById('ep-id').value;
+  const btn=document.getElementById('ep-save-btn'); btn.disabled=true; btn.textContent='Guardando...';
+  setSyncing(true);
+  const period=document.getElementById('ep-period').value;
+  const curQ=quarters.find(x=>x.id===allProjectsCache.find(p=>p.id===projId)?.quarter_id)||getActiveQuarter();
+  const matchQ=quarters.find(q=>q.period===period&&q.year===curQ.year)||curQ;
+  const payload={
+    name:document.getElementById('ep-name').value.trim(),
+    color:document.getElementById('ep-color').value,
+    squad:document.getElementById('ep-squad').value||null,
+    quarter_id:matchQ.id,
+  };
+  const {error}=await db.from('projects').update(payload).eq('id',projId);
+  setSyncing(false); btn.disabled=false; btn.textContent='💾 Guardar';
+  if(error){showToast('Error: '+error.message,true);return;}
+  closeEditProject(); showToast('Proyecto actualizado ✓'); await loadAll();
+}
+
 async function saveAddProject(){
-  // attach to active quarter
   const name=document.getElementById('ap-name').value.trim(), rawId=document.getElementById('ap-id').value.trim().replace(/\s+/g,'_').toLowerCase();
   if(!name||!rawId){alert('Nombre e ID son obligatorios');return;}
+  const squad=document.getElementById('ap-squad').value||null;
+  const period=document.getElementById('ap-period').value||'C2';
+  const year=parseInt(document.getElementById('ap-year').value)||2026;
+  // Find matching quarter_id or use active
+  const matchQ=quarters.find(q=>q.period===period&&q.year===year);
+  const qId=matchQ?.id||activeQuarterId;
   const btn=document.getElementById('ap-save-btn'); btn.disabled=true; btn.textContent='Creando...';
   setSyncing(true);
-  const {error}=await db.from('projects').insert({id:rawId,name,color:document.getElementById('ap-color').value,quarter_id:activeQuarterId});
+  const {error}=await db.from('projects').insert({id:rawId,name,color:document.getElementById('ap-color').value,quarter_id:qId,squad});
   setSyncing(false); btn.disabled=false; btn.textContent='Crear proyecto';
   if(error){showToast('Error: '+error.message,true);return;}
   closeAddProject(); showToast('Proyecto creado ✓'); await loadAll();
